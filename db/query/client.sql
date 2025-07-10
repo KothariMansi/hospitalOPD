@@ -1,29 +1,30 @@
--- name: CreateClient :one
-INSERT INTO Client(
+-- name: CreateClient :exec
+INSERT INTO Client (
     name, state, city, age
 ) VALUES (
-    $1, $2, $3, $4
-)
-RETURNING *;
+    ?, ?, ?, ?
+);
+
+-- name: GetLastInsertedClient :one
+SELECT * FROM Client WHERE id = LAST_INSERT_ID();
 
 -- name: GetClient :one
 SELECT * FROM Client
-WHERE id=$1 LIMIT 1;
+WHERE id = ? LIMIT 1;
 
 -- name: ListClient :many
 SELECT * FROM Client
 ORDER BY id
-LIMIT $1 
-OFFSET $2;
+LIMIT ? 
+OFFSET ?;
 
--- name: UpdateClient :one
+-- name: UpdateClient :exec
 UPDATE Client
-SET name = $2,
-state = $3,
-city = $4,
-age = $5
-WHERE id=$1
-RETURNING *;
+SET name = ?,
+state = ?,
+city = ?,
+age = ?
+WHERE id = ?;
 
 -- name: DeleteClient :exec
-DELETE FROM Client WHERE id=$1;
+DELETE FROM Client WHERE id = ?;
