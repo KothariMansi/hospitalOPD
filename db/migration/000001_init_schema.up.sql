@@ -1,95 +1,87 @@
 CREATE TABLE `Client` (
-  `id` int PRIMARY KEY,
-  `name` varchar(255) NOT NULL,
-  `state` varchar(255) NOT NULL,
-  `city` varchar(255) NOT NULL,
-  `age` int NOT NULL
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(255) NOT NULL,
+  `state` VARCHAR(255) NOT NULL,
+  `city` VARCHAR(255) NOT NULL,
+  `age` INT NOT NULL
 );
 
 CREATE TABLE `User` (
-  `id` int PRIMARY KEY,
-  `name` varchar(255) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `state` varchar(255) NOT NULL,
-  `city` varchar(255) NOT NULL,
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(255) NOT NULL,
+  `password` VARCHAR(255) NOT NULL,
+  `state` VARCHAR(255) NOT NULL,
+  `city` VARCHAR(255) NOT NULL,
   `gender` ENUM ('MALE', 'FEMALE', 'OTHER') NOT NULL,
-  `age` int
+  `age` INT
 );
 
 CREATE TABLE `Hospital` (
-  `id` int PRIMARY KEY,
-  `name` varchar(255) NOT NULL,
-  `photo` varchar(255),
-  `state` varchar(255) NOT NULL,
-  `city` varchar(255) NOT NULL,
-  `address` varchar(255) NOT NULL,
-  `phone` varchar(255)
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(255) NOT NULL,
+  `photo` VARCHAR(255),
+  `state` VARCHAR(255) NOT NULL,
+  `city` VARCHAR(255) NOT NULL,
+  `address` VARCHAR(255) NOT NULL,
+  `phone` VARCHAR(255)
 );
 
 CREATE TABLE `Speciality` (
-  `id` int PRIMARY KEY,
-  `speciality_name` varchar(255) NOT NULL
-);
-
-CREATE TABLE `DoctorSpeciality` (
-  `id` int  PRIMARY KEY,
-  `speciality_id` int NOT NULL,
-  `docter_id` int NOT NULL
-);
-
-CREATE TABLE `OPDLine` (
-  `id` int PRIMARY KEY,
-  `reg_time` datetime,
-  `token_number` int NOT NULL,
-  `client_id` int NOT NULL,
-  `doctor_id` int NOT NULL,
-  `isChecked` bool NOT NULL,
-  `checked_time` datetime
-);
-
-CREATE TABLE `EmergencyLine` (
-  `id` int PRIMARY KEY,
-  `reg_time` datetime,
-  `token_number` int NOT NULL,
-  `client_id` int NOT NULL,
-  `doctor_id` int NOT NULL,
-  `isChecked` bool NOT NULL,
-  `checked_time` datetime
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `speciality_name` VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE `CheckUpTime` (
-  `id` int PRIMARY KEY,
-  `morning` datetime,
-  `evening` datetime,
-  `night` datetime
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `morning` DATETIME,
+  `evening` DATETIME,
+  `night` DATETIME
 );
 
 CREATE TABLE `Doctor` (
-  `id` int PRIMARY KEY,
-  `Name` varchar(255) NOT NULL,
-  `username` varchar(255) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `hospital_id` int NOT NULL,
-  `resident_address` varchar(255),
-  `isMorning` bool,
-  `isEvening` bool,
-  `isNight` bool,
-  `checkup_time_id` int NOT NULL,
-  `isOnLeave` bool
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `Name` VARCHAR(255) NOT NULL,
+  `username` VARCHAR(255) NOT NULL,
+  `password` VARCHAR(255) NOT NULL,
+  `hospital_id` INT NOT NULL,
+  `resident_address` VARCHAR(255),
+  `isMorning` BOOLEAN,
+  `isEvening` BOOLEAN,
+  `isNight` BOOLEAN,
+  `checkup_time_id` INT NOT NULL,
+  `isOnLeave` BOOLEAN,
+  FOREIGN KEY (`hospital_id`) REFERENCES `Hospital`(`id`),
+  FOREIGN KEY (`checkup_time_id`) REFERENCES `CheckUpTime`(`id`)
 );
 
-ALTER TABLE `DoctorSpeciality` ADD FOREIGN KEY (`speciality_id`) REFERENCES `Speciality` (`id`);
+CREATE TABLE `DoctorSpeciality` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `speciality_id` INT NOT NULL,
+  `docter_id` INT NOT NULL,
+  FOREIGN KEY (`speciality_id`) REFERENCES `Speciality` (`id`),
+  FOREIGN KEY (`docter_id`) REFERENCES `Doctor` (`id`)
+);
 
-ALTER TABLE `DoctorSpeciality` ADD FOREIGN KEY (`docter_id`) REFERENCES `Doctor` (`id`);
+CREATE TABLE `OPDLine` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `reg_time` DATETIME,
+  `token_number` INT NOT NULL,
+  `client_id` INT NOT NULL,
+  `doctor_id` INT NOT NULL,
+  `isChecked` BOOLEAN NOT NULL,
+  `checked_time` DATETIME,
+  FOREIGN KEY (`client_id`) REFERENCES `Client` (`id`),
+  FOREIGN KEY (`doctor_id`) REFERENCES `Doctor` (`id`)
+);
 
-ALTER TABLE `OPDLine` ADD FOREIGN KEY (`client_id`) REFERENCES `Client` (`id`);
-
-ALTER TABLE `OPDLine` ADD FOREIGN KEY (`doctor_id`) REFERENCES `Doctor` (`id`);
-
-ALTER TABLE `EmergencyLine` ADD FOREIGN KEY (`client_id`) REFERENCES `Client` (`id`);
-
-ALTER TABLE `EmergencyLine` ADD FOREIGN KEY (`doctor_id`) REFERENCES `Doctor` (`id`);
-
-ALTER TABLE `Doctor` ADD FOREIGN KEY (`hospital_id`) REFERENCES `Hospital` (`id`);
-
-ALTER TABLE `Doctor` ADD FOREIGN KEY (`checkup_time_id`) REFERENCES `CheckUpTime` (`id`);
+CREATE TABLE `EmergencyLine` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `reg_time` DATETIME,
+  `token_number` INT NOT NULL,
+  `client_id` INT NOT NULL,
+  `doctor_id` INT NOT NULL,
+  `isChecked` BOOLEAN NOT NULL,
+  `checked_time` DATETIME,
+  FOREIGN KEY (`client_id`) REFERENCES `Client` (`id`),
+  FOREIGN KEY (`doctor_id`) REFERENCES `Doctor` (`id`)
+);

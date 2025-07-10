@@ -7,14 +7,12 @@ package db
 
 import (
 	"context"
+	"database/sql"
 )
 
-const createClient = `-- name: CreateClient :exec
-INSERT INTO Client (
-    name, state, city, age
-) VALUES (
-    ?, ?, ?, ?
-)
+const createClient = `-- name: CreateClient :execresult
+INSERT INTO Client (name, state, city, age)
+VALUES (?, ?, ?, ?)
 `
 
 type CreateClientParams struct {
@@ -24,14 +22,13 @@ type CreateClientParams struct {
 	Age   int32  `json:"age"`
 }
 
-func (q *Queries) CreateClient(ctx context.Context, arg CreateClientParams) error {
-	_, err := q.db.ExecContext(ctx, createClient,
+func (q *Queries) CreateClient(ctx context.Context, arg CreateClientParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, createClient,
 		arg.Name,
 		arg.State,
 		arg.City,
 		arg.Age,
 	)
-	return err
 }
 
 const deleteClient = `-- name: DeleteClient :exec
@@ -44,8 +41,7 @@ func (q *Queries) DeleteClient(ctx context.Context, id int32) error {
 }
 
 const getClient = `-- name: GetClient :one
-SELECT id, name, state, city, age FROM Client
-WHERE id = ? LIMIT 1
+SELECT id, name, state, city, age FROM Client WHERE id = ?
 `
 
 func (q *Queries) GetClient(ctx context.Context, id int32) (Client, error) {
@@ -61,37 +57,17 @@ func (q *Queries) GetClient(ctx context.Context, id int32) (Client, error) {
 	return i, err
 }
 
-const getLastInsertedClient = `-- name: GetLastInsertedClient :one
-SELECT id, name, state, city, age FROM Client WHERE id = LAST_INSERT_ID()
+const listClients = `-- name: ListClients :many
+SELECT id, name, state, city, age FROM Client ORDER BY id LIMIT ? OFFSET ?
 `
 
-func (q *Queries) GetLastInsertedClient(ctx context.Context) (Client, error) {
-	row := q.db.QueryRowContext(ctx, getLastInsertedClient)
-	var i Client
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.State,
-		&i.City,
-		&i.Age,
-	)
-	return i, err
-}
-
-const listClient = `-- name: ListClient :many
-SELECT id, name, state, city, age FROM Client
-ORDER BY id
-LIMIT ? 
-OFFSET ?
-`
-
-type ListClientParams struct {
+type ListClientsParams struct {
 	Limit  int32 `json:"limit"`
 	Offset int32 `json:"offset"`
 }
 
-func (q *Queries) ListClient(ctx context.Context, arg ListClientParams) ([]Client, error) {
-	rows, err := q.db.QueryContext(ctx, listClient, arg.Limit, arg.Offset)
+func (q *Queries) ListClients(ctx context.Context, arg ListClientsParams) ([]Client, error) {
+	rows, err := q.db.QueryContext(ctx, listClients, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -120,12 +96,7 @@ func (q *Queries) ListClient(ctx context.Context, arg ListClientParams) ([]Clien
 }
 
 const updateClient = `-- name: UpdateClient :exec
-UPDATE Client
-SET name = ?,
-state = ?,
-city = ?,
-age = ?
-WHERE id = ?
+UPDATE Client SET name = ?, state = ?, city = ?, age = ? WHERE id = ?
 `
 
 type UpdateClientParams struct {
