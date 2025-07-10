@@ -103,6 +103,64 @@ func (q *Queries) ListOPDLines(ctx context.Context, arg ListOPDLinesParams) ([]O
 	return items, nil
 }
 
+const listOPDWithDetails = `-- name: ListOPDWithDetails :many
+SELECT 
+  o.id, o.reg_time, o.token_number, o.isChecked, o.checked_time,
+  c.name AS client_name,
+  d.name AS doctor_name
+FROM OPDLine o
+JOIN Client c ON o.client_id = c.id
+JOIN Doctor d ON o.doctor_id = d.id
+ORDER BY o.reg_time DESC
+LIMIT ? OFFSET ?
+`
+
+type ListOPDWithDetailsParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+type ListOPDWithDetailsRow struct {
+	ID          int32        `json:"id"`
+	RegTime     sql.NullTime `json:"reg_time"`
+	TokenNumber int32        `json:"token_number"`
+	Ischecked   bool         `json:"ischecked"`
+	CheckedTime sql.NullTime `json:"checked_time"`
+	ClientName  string       `json:"client_name"`
+	DoctorName  string       `json:"doctor_name"`
+}
+
+func (q *Queries) ListOPDWithDetails(ctx context.Context, arg ListOPDWithDetailsParams) ([]ListOPDWithDetailsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listOPDWithDetails, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListOPDWithDetailsRow{}
+	for rows.Next() {
+		var i ListOPDWithDetailsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.RegTime,
+			&i.TokenNumber,
+			&i.Ischecked,
+			&i.CheckedTime,
+			&i.ClientName,
+			&i.DoctorName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateOPDLine = `-- name: UpdateOPDLine :exec
 UPDATE OPDLine SET
   reg_time = ?, token_number = ?, client_id = ?, doctor_id = ?, isChecked = ?, checked_time = ?

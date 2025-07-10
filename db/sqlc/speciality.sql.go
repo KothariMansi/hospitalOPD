@@ -10,6 +10,17 @@ import (
 	"database/sql"
 )
 
+const countSpecialities = `-- name: CountSpecialities :one
+SELECT COUNT(*) FROM Speciality
+`
+
+func (q *Queries) CountSpecialities(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countSpecialities)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createSpeciality = `-- name: CreateSpeciality :execresult
 INSERT INTO Speciality (speciality_name)
 VALUES (?)
@@ -50,6 +61,42 @@ type ListSpecialitiesParams struct {
 
 func (q *Queries) ListSpecialities(ctx context.Context, arg ListSpecialitiesParams) ([]Speciality, error) {
 	rows, err := q.db.QueryContext(ctx, listSpecialities, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Speciality{}
+	for rows.Next() {
+		var i Speciality
+		if err := rows.Scan(&i.ID, &i.SpecialityName); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const searchSpecialitiesByName = `-- name: SearchSpecialitiesByName :many
+SELECT id, speciality_name FROM Speciality
+WHERE speciality_name LIKE ?
+ORDER BY speciality_name
+LIMIT ? OFFSET ?
+`
+
+type SearchSpecialitiesByNameParams struct {
+	SpecialityName string `json:"speciality_name"`
+	Limit          int32  `json:"limit"`
+	Offset         int32  `json:"offset"`
+}
+
+func (q *Queries) SearchSpecialitiesByName(ctx context.Context, arg SearchSpecialitiesByNameParams) ([]Speciality, error) {
+	rows, err := q.db.QueryContext(ctx, searchSpecialitiesByName, arg.SpecialityName, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

@@ -10,6 +10,17 @@ import (
 	"database/sql"
 )
 
+const countHospitals = `-- name: CountHospitals :one
+SELECT COUNT(*) FROM Hospital
+`
+
+func (q *Queries) CountHospitals(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countHospitals)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createHospital = `-- name: CreateHospital :execresult
 INSERT INTO Hospital (name, photo, state, city, address, phone)
 VALUES (?, ?, ?, ?, ?, ?)
@@ -74,6 +85,100 @@ type ListHospitalsParams struct {
 
 func (q *Queries) ListHospitals(ctx context.Context, arg ListHospitalsParams) ([]Hospital, error) {
 	rows, err := q.db.QueryContext(ctx, listHospitals, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Hospital{}
+	for rows.Next() {
+		var i Hospital
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Photo,
+			&i.State,
+			&i.City,
+			&i.Address,
+			&i.Phone,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listHospitalsByLocation = `-- name: ListHospitalsByLocation :many
+SELECT id, name, photo, state, city, address, phone FROM Hospital
+WHERE state = ? AND city = ?
+ORDER BY id
+LIMIT ? OFFSET ?
+`
+
+type ListHospitalsByLocationParams struct {
+	State  string `json:"state"`
+	City   string `json:"city"`
+	Limit  int32  `json:"limit"`
+	Offset int32  `json:"offset"`
+}
+
+func (q *Queries) ListHospitalsByLocation(ctx context.Context, arg ListHospitalsByLocationParams) ([]Hospital, error) {
+	rows, err := q.db.QueryContext(ctx, listHospitalsByLocation,
+		arg.State,
+		arg.City,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Hospital{}
+	for rows.Next() {
+		var i Hospital
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Photo,
+			&i.State,
+			&i.City,
+			&i.Address,
+			&i.Phone,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const searchHospitalsByName = `-- name: SearchHospitalsByName :many
+SELECT id, name, photo, state, city, address, phone FROM Hospital
+WHERE name LIKE ?
+ORDER BY id
+LIMIT ? OFFSET ?
+`
+
+type SearchHospitalsByNameParams struct {
+	Name   string `json:"name"`
+	Limit  int32  `json:"limit"`
+	Offset int32  `json:"offset"`
+}
+
+func (q *Queries) SearchHospitalsByName(ctx context.Context, arg SearchHospitalsByNameParams) ([]Hospital, error) {
+	rows, err := q.db.QueryContext(ctx, searchHospitalsByName, arg.Name, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

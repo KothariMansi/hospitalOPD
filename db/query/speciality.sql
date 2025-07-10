@@ -13,3 +13,12 @@ UPDATE Speciality SET speciality_name = ? WHERE id = ?;
 
 -- name: DeleteSpeciality :exec
 DELETE FROM Speciality WHERE id = ?;
+
+-- name: CountSpecialities :one
+SELECT COUNT(*) FROM Speciality;
+
+-- name: SearchSpecialitiesByName :many
+SELECT * FROM Speciality
+WHERE speciality_name LIKE ?
+ORDER BY speciality_name
+LIMIT ? OFFSET ?;

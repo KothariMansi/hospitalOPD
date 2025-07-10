@@ -15,3 +15,18 @@ WHERE id = ?;
 
 -- name: DeleteHospital :exec
 DELETE FROM Hospital WHERE id = ?;
+
+-- name: CountHospitals :one
+SELECT COUNT(*) FROM Hospital;
+
+-- name: SearchHospitalsByName :many
+SELECT * FROM Hospital
+WHERE name LIKE ?
+ORDER BY id
+LIMIT ? OFFSET ?;
+
+-- name: ListHospitalsByLocation :many
+SELECT * FROM Hospital
+WHERE state = ? AND city = ?
+ORDER BY id
+LIMIT ? OFFSET ?;

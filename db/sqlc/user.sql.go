@@ -10,6 +10,17 @@ import (
 	"database/sql"
 )
 
+const countUsers = `-- name: CountUsers :one
+SELECT COUNT(*) FROM User
+`
+
+func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countUsers)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createUser = `-- name: CreateUser :execresult
 INSERT INTO User (name, password, state, city, gender, age)
 VALUES (?, ?, ?, ?, ?, ?)
@@ -74,6 +85,100 @@ type ListUsersParams struct {
 
 func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error) {
 	rows, err := q.db.QueryContext(ctx, listUsers, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []User{}
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Password,
+			&i.State,
+			&i.City,
+			&i.Gender,
+			&i.Age,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUsersByGenderAndCity = `-- name: ListUsersByGenderAndCity :many
+SELECT id, name, password, state, city, gender, age FROM User
+WHERE gender = ? AND city = ?
+ORDER BY id
+LIMIT ? OFFSET ?
+`
+
+type ListUsersByGenderAndCityParams struct {
+	Gender UserGender `json:"gender"`
+	City   string     `json:"city"`
+	Limit  int32      `json:"limit"`
+	Offset int32      `json:"offset"`
+}
+
+func (q *Queries) ListUsersByGenderAndCity(ctx context.Context, arg ListUsersByGenderAndCityParams) ([]User, error) {
+	rows, err := q.db.QueryContext(ctx, listUsersByGenderAndCity,
+		arg.Gender,
+		arg.City,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []User{}
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Password,
+			&i.State,
+			&i.City,
+			&i.Gender,
+			&i.Age,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const searchUsersByName = `-- name: SearchUsersByName :many
+SELECT id, name, password, state, city, gender, age FROM User
+WHERE name LIKE ?
+ORDER BY id
+LIMIT ? OFFSET ?
+`
+
+type SearchUsersByNameParams struct {
+	Name   string `json:"name"`
+	Limit  int32  `json:"limit"`
+	Offset int32  `json:"offset"`
+}
+
+func (q *Queries) SearchUsersByName(ctx context.Context, arg SearchUsersByNameParams) ([]User, error) {
+	rows, err := q.db.QueryContext(ctx, searchUsersByName, arg.Name, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

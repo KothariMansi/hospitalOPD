@@ -13,3 +13,18 @@ UPDATE Client SET name = ?, state = ?, city = ?, age = ? WHERE id = ?;
 
 -- name: DeleteClient :exec
 DELETE FROM Client WHERE id = ?;
+
+-- name: CountClients :one
+SELECT COUNT(*) FROM Client;
+
+-- name: SearchClientsByName :many
+SELECT * FROM Client
+WHERE name LIKE ?
+ORDER BY id
+LIMIT ? OFFSET ?;
+
+-- name: ListClientsByLocation :many
+SELECT * FROM Client
+WHERE city = ? AND state = ?
+ORDER BY id
+LIMIT ? OFFSET ?;

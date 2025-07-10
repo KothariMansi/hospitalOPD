@@ -10,6 +10,17 @@ import (
 	"database/sql"
 )
 
+const countEmergencyLines = `-- name: CountEmergencyLines :one
+SELECT COUNT(*) FROM EmergencyLine
+`
+
+func (q *Queries) CountEmergencyLines(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countEmergencyLines)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createEmergencyLine = `-- name: CreateEmergencyLine :execresult
 INSERT INTO EmergencyLine (reg_time, token_number, client_id, doctor_id, isChecked, checked_time)
 VALUES (?, ?, ?, ?, ?, ?)
@@ -89,6 +100,64 @@ func (q *Queries) ListEmergencyLines(ctx context.Context, arg ListEmergencyLines
 			&i.DoctorID,
 			&i.Ischecked,
 			&i.CheckedTime,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEmergencyWithDetails = `-- name: ListEmergencyWithDetails :many
+SELECT 
+  e.id, e.reg_time, e.token_number, e.isChecked, e.checked_time,
+  c.name AS client_name,
+  d.name AS doctor_name
+FROM EmergencyLine e
+JOIN Client c ON e.client_id = c.id
+JOIN Doctor d ON e.doctor_id = d.id
+ORDER BY e.reg_time DESC
+LIMIT ? OFFSET ?
+`
+
+type ListEmergencyWithDetailsParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+type ListEmergencyWithDetailsRow struct {
+	ID          int32        `json:"id"`
+	RegTime     sql.NullTime `json:"reg_time"`
+	TokenNumber int32        `json:"token_number"`
+	Ischecked   bool         `json:"ischecked"`
+	CheckedTime sql.NullTime `json:"checked_time"`
+	ClientName  string       `json:"client_name"`
+	DoctorName  string       `json:"doctor_name"`
+}
+
+func (q *Queries) ListEmergencyWithDetails(ctx context.Context, arg ListEmergencyWithDetailsParams) ([]ListEmergencyWithDetailsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listEmergencyWithDetails, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEmergencyWithDetailsRow{}
+	for rows.Next() {
+		var i ListEmergencyWithDetailsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.RegTime,
+			&i.TokenNumber,
+			&i.Ischecked,
+			&i.CheckedTime,
+			&i.ClientName,
+			&i.DoctorName,
 		); err != nil {
 			return nil, err
 		}

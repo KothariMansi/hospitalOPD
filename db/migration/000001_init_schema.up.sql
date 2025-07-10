@@ -38,20 +38,19 @@ CREATE TABLE `CheckUpTime` (
   `night` DATETIME
 );
 
-CREATE TABLE `Doctor` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `Name` VARCHAR(255) NOT NULL,
-  `username` VARCHAR(255) NOT NULL,
-  `password` VARCHAR(255) NOT NULL,
-  `hospital_id` INT NOT NULL,
-  `resident_address` VARCHAR(255),
-  `isMorning` BOOLEAN,
-  `isEvening` BOOLEAN,
-  `isNight` BOOLEAN,
-  `checkup_time_id` INT NOT NULL,
-  `isOnLeave` BOOLEAN,
-  FOREIGN KEY (`hospital_id`) REFERENCES `Hospital`(`id`),
-  FOREIGN KEY (`checkup_time_id`) REFERENCES `CheckUpTime`(`id`)
+CREATE TABLE Doctor (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  username VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  hospital_id INT NOT NULL,
+  resident_address VARCHAR(255),
+  checkup_time_id INT NOT NULL,
+  is_on_leave BOOLEAN DEFAULT FALSE,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (hospital_id) REFERENCES Hospital(id),
+  FOREIGN KEY (checkup_time_id) REFERENCES CheckUpTime(id)
 );
 
 CREATE TABLE `DoctorSpeciality` (

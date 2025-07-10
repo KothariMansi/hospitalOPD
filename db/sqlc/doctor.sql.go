@@ -10,11 +10,22 @@ import (
 	"database/sql"
 )
 
+const countDoctors = `-- name: CountDoctors :one
+SELECT COUNT(*) FROM Doctor
+`
+
+func (q *Queries) CountDoctors(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countDoctors)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createDoctor = `-- name: CreateDoctor :execresult
 INSERT INTO Doctor (
-  Name, username, password, hospital_id, resident_address,
-  isMorning, isEvening, isNight, checkup_time_id, isOnLeave
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  name, username, password, hospital_id,
+  resident_address, checkup_time_id, is_on_leave
+) VALUES (?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateDoctorParams struct {
@@ -23,11 +34,8 @@ type CreateDoctorParams struct {
 	Password        string         `json:"password"`
 	HospitalID      int32          `json:"hospital_id"`
 	ResidentAddress sql.NullString `json:"resident_address"`
-	Ismorning       sql.NullBool   `json:"ismorning"`
-	Isevening       sql.NullBool   `json:"isevening"`
-	Isnight         sql.NullBool   `json:"isnight"`
 	CheckupTimeID   int32          `json:"checkup_time_id"`
-	Isonleave       sql.NullBool   `json:"isonleave"`
+	IsOnLeave       sql.NullBool   `json:"is_on_leave"`
 }
 
 func (q *Queries) CreateDoctor(ctx context.Context, arg CreateDoctorParams) (sql.Result, error) {
@@ -37,11 +45,8 @@ func (q *Queries) CreateDoctor(ctx context.Context, arg CreateDoctorParams) (sql
 		arg.Password,
 		arg.HospitalID,
 		arg.ResidentAddress,
-		arg.Ismorning,
-		arg.Isevening,
-		arg.Isnight,
 		arg.CheckupTimeID,
-		arg.Isonleave,
+		arg.IsOnLeave,
 	)
 }
 
@@ -55,7 +60,7 @@ func (q *Queries) DeleteDoctor(ctx context.Context, id int32) error {
 }
 
 const getDoctor = `-- name: GetDoctor :one
-SELECT id, name, username, password, hospital_id, resident_address, ismorning, isevening, isnight, checkup_time_id, isonleave FROM Doctor WHERE id = ?
+SELECT id, name, username, password, hospital_id, resident_address, checkup_time_id, is_on_leave, created_at, updated_at FROM Doctor WHERE id = ?
 `
 
 func (q *Queries) GetDoctor(ctx context.Context, id int32) (Doctor, error) {
@@ -68,17 +73,39 @@ func (q *Queries) GetDoctor(ctx context.Context, id int32) (Doctor, error) {
 		&i.Password,
 		&i.HospitalID,
 		&i.ResidentAddress,
-		&i.Ismorning,
-		&i.Isevening,
-		&i.Isnight,
 		&i.CheckupTimeID,
-		&i.Isonleave,
+		&i.IsOnLeave,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getDoctorByUsername = `-- name: GetDoctorByUsername :one
+SELECT id, name, username, password, hospital_id, resident_address, checkup_time_id, is_on_leave, created_at, updated_at FROM Doctor
+WHERE username = ?
+`
+
+func (q *Queries) GetDoctorByUsername(ctx context.Context, username string) (Doctor, error) {
+	row := q.db.QueryRowContext(ctx, getDoctorByUsername, username)
+	var i Doctor
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Username,
+		&i.Password,
+		&i.HospitalID,
+		&i.ResidentAddress,
+		&i.CheckupTimeID,
+		&i.IsOnLeave,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const listDoctors = `-- name: ListDoctors :many
-SELECT id, name, username, password, hospital_id, resident_address, ismorning, isevening, isnight, checkup_time_id, isonleave FROM Doctor ORDER BY id
+SELECT id, name, username, password, hospital_id, resident_address, checkup_time_id, is_on_leave, created_at, updated_at FROM Doctor ORDER BY id
 `
 
 func (q *Queries) ListDoctors(ctx context.Context) ([]Doctor, error) {
@@ -97,11 +124,216 @@ func (q *Queries) ListDoctors(ctx context.Context) ([]Doctor, error) {
 			&i.Password,
 			&i.HospitalID,
 			&i.ResidentAddress,
-			&i.Ismorning,
-			&i.Isevening,
-			&i.Isnight,
 			&i.CheckupTimeID,
-			&i.Isonleave,
+			&i.IsOnLeave,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listDoctorsByHospital = `-- name: ListDoctorsByHospital :many
+SELECT id, name, username, password, hospital_id, resident_address, checkup_time_id, is_on_leave, created_at, updated_at FROM Doctor
+WHERE hospital_id = ?
+ORDER BY id
+LIMIT ? OFFSET ?
+`
+
+type ListDoctorsByHospitalParams struct {
+	HospitalID int32 `json:"hospital_id"`
+	Limit      int32 `json:"limit"`
+	Offset     int32 `json:"offset"`
+}
+
+func (q *Queries) ListDoctorsByHospital(ctx context.Context, arg ListDoctorsByHospitalParams) ([]Doctor, error) {
+	rows, err := q.db.QueryContext(ctx, listDoctorsByHospital, arg.HospitalID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Doctor{}
+	for rows.Next() {
+		var i Doctor
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Username,
+			&i.Password,
+			&i.HospitalID,
+			&i.ResidentAddress,
+			&i.CheckupTimeID,
+			&i.IsOnLeave,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listDoctorsOnLeave = `-- name: ListDoctorsOnLeave :many
+SELECT id, name, username, password, hospital_id, resident_address, checkup_time_id, is_on_leave, created_at, updated_at FROM Doctor
+WHERE is_on_leave = TRUE
+ORDER BY id
+LIMIT ? OFFSET ?
+`
+
+type ListDoctorsOnLeaveParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListDoctorsOnLeave(ctx context.Context, arg ListDoctorsOnLeaveParams) ([]Doctor, error) {
+	rows, err := q.db.QueryContext(ctx, listDoctorsOnLeave, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Doctor{}
+	for rows.Next() {
+		var i Doctor
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Username,
+			&i.Password,
+			&i.HospitalID,
+			&i.ResidentAddress,
+			&i.CheckupTimeID,
+			&i.IsOnLeave,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listDoctorsWithHospital = `-- name: ListDoctorsWithHospital :many
+SELECT 
+  d.id, d.name, d.username, d.password, d.hospital_id,
+  h.name AS hospital_name,
+  d.resident_address, d.checkup_time_id, d.is_on_leave,
+  d.created_at, d.updated_at
+FROM Doctor d
+JOIN Hospital h ON d.hospital_id = h.id
+ORDER BY d.id
+LIMIT ? OFFSET ?
+`
+
+type ListDoctorsWithHospitalParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+type ListDoctorsWithHospitalRow struct {
+	ID              int32          `json:"id"`
+	Name            string         `json:"name"`
+	Username        string         `json:"username"`
+	Password        string         `json:"password"`
+	HospitalID      int32          `json:"hospital_id"`
+	HospitalName    string         `json:"hospital_name"`
+	ResidentAddress sql.NullString `json:"resident_address"`
+	CheckupTimeID   int32          `json:"checkup_time_id"`
+	IsOnLeave       sql.NullBool   `json:"is_on_leave"`
+	CreatedAt       sql.NullTime   `json:"created_at"`
+	UpdatedAt       sql.NullTime   `json:"updated_at"`
+}
+
+func (q *Queries) ListDoctorsWithHospital(ctx context.Context, arg ListDoctorsWithHospitalParams) ([]ListDoctorsWithHospitalRow, error) {
+	rows, err := q.db.QueryContext(ctx, listDoctorsWithHospital, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListDoctorsWithHospitalRow{}
+	for rows.Next() {
+		var i ListDoctorsWithHospitalRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Username,
+			&i.Password,
+			&i.HospitalID,
+			&i.HospitalName,
+			&i.ResidentAddress,
+			&i.CheckupTimeID,
+			&i.IsOnLeave,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const searchDoctorsByName = `-- name: SearchDoctorsByName :many
+SELECT id, name, username, password, hospital_id, resident_address, checkup_time_id, is_on_leave, created_at, updated_at FROM Doctor
+WHERE name LIKE ?
+ORDER BY id
+LIMIT ? OFFSET ?
+`
+
+type SearchDoctorsByNameParams struct {
+	Name   string `json:"name"`
+	Limit  int32  `json:"limit"`
+	Offset int32  `json:"offset"`
+}
+
+func (q *Queries) SearchDoctorsByName(ctx context.Context, arg SearchDoctorsByNameParams) ([]Doctor, error) {
+	rows, err := q.db.QueryContext(ctx, searchDoctorsByName, arg.Name, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Doctor{}
+	for rows.Next() {
+		var i Doctor
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Username,
+			&i.Password,
+			&i.HospitalID,
+			&i.ResidentAddress,
+			&i.CheckupTimeID,
+			&i.IsOnLeave,
+			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -118,8 +350,13 @@ func (q *Queries) ListDoctors(ctx context.Context) ([]Doctor, error) {
 
 const updateDoctor = `-- name: UpdateDoctor :exec
 UPDATE Doctor SET
-  Name = ?, username = ?, password = ?, hospital_id = ?, resident_address = ?,
-  isMorning = ?, isEvening = ?, isNight = ?, checkup_time_id = ?, isOnLeave = ?
+  name = ?,
+  username = ?,
+  password = ?,
+  hospital_id = ?,
+  resident_address = ?,
+  checkup_time_id = ?,
+  is_on_leave = ?
 WHERE id = ?
 `
 
@@ -129,11 +366,8 @@ type UpdateDoctorParams struct {
 	Password        string         `json:"password"`
 	HospitalID      int32          `json:"hospital_id"`
 	ResidentAddress sql.NullString `json:"resident_address"`
-	Ismorning       sql.NullBool   `json:"ismorning"`
-	Isevening       sql.NullBool   `json:"isevening"`
-	Isnight         sql.NullBool   `json:"isnight"`
 	CheckupTimeID   int32          `json:"checkup_time_id"`
-	Isonleave       sql.NullBool   `json:"isonleave"`
+	IsOnLeave       sql.NullBool   `json:"is_on_leave"`
 	ID              int32          `json:"id"`
 }
 
@@ -144,11 +378,8 @@ func (q *Queries) UpdateDoctor(ctx context.Context, arg UpdateDoctorParams) erro
 		arg.Password,
 		arg.HospitalID,
 		arg.ResidentAddress,
-		arg.Ismorning,
-		arg.Isevening,
-		arg.Isnight,
 		arg.CheckupTimeID,
-		arg.Isonleave,
+		arg.IsOnLeave,
 		arg.ID,
 	)
 	return err

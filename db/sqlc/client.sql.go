@@ -10,6 +10,17 @@ import (
 	"database/sql"
 )
 
+const countClients = `-- name: CountClients :one
+SELECT COUNT(*) FROM Client
+`
+
+func (q *Queries) CountClients(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countClients)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createClient = `-- name: CreateClient :execresult
 INSERT INTO Client (name, state, city, age)
 VALUES (?, ?, ?, ?)
@@ -68,6 +79,96 @@ type ListClientsParams struct {
 
 func (q *Queries) ListClients(ctx context.Context, arg ListClientsParams) ([]Client, error) {
 	rows, err := q.db.QueryContext(ctx, listClients, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Client{}
+	for rows.Next() {
+		var i Client
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.State,
+			&i.City,
+			&i.Age,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listClientsByLocation = `-- name: ListClientsByLocation :many
+SELECT id, name, state, city, age FROM Client
+WHERE city = ? AND state = ?
+ORDER BY id
+LIMIT ? OFFSET ?
+`
+
+type ListClientsByLocationParams struct {
+	City   string `json:"city"`
+	State  string `json:"state"`
+	Limit  int32  `json:"limit"`
+	Offset int32  `json:"offset"`
+}
+
+func (q *Queries) ListClientsByLocation(ctx context.Context, arg ListClientsByLocationParams) ([]Client, error) {
+	rows, err := q.db.QueryContext(ctx, listClientsByLocation,
+		arg.City,
+		arg.State,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Client{}
+	for rows.Next() {
+		var i Client
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.State,
+			&i.City,
+			&i.Age,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const searchClientsByName = `-- name: SearchClientsByName :many
+SELECT id, name, state, city, age FROM Client
+WHERE name LIKE ?
+ORDER BY id
+LIMIT ? OFFSET ?
+`
+
+type SearchClientsByNameParams struct {
+	Name   string `json:"name"`
+	Limit  int32  `json:"limit"`
+	Offset int32  `json:"offset"`
+}
+
+func (q *Queries) SearchClientsByName(ctx context.Context, arg SearchClientsByNameParams) ([]Client, error) {
+	rows, err := q.db.QueryContext(ctx, searchClientsByName, arg.Name, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

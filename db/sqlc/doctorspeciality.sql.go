@@ -76,6 +76,86 @@ func (q *Queries) ListDoctorSpecialities(ctx context.Context, arg ListDoctorSpec
 	return items, nil
 }
 
+const listDoctorsBySpecialityID = `-- name: ListDoctorsBySpecialityID :many
+SELECT d.id, d.name, d.username, d.password, d.hospital_id, d.resident_address, d.checkup_time_id, d.is_on_leave, d.created_at, d.updated_at
+FROM DoctorSpeciality ds
+JOIN Doctor d ON ds.docter_id = d.id
+WHERE ds.speciality_id = ?
+ORDER BY d.name
+LIMIT ? OFFSET ?
+`
+
+type ListDoctorsBySpecialityIDParams struct {
+	SpecialityID int32 `json:"speciality_id"`
+	Limit        int32 `json:"limit"`
+	Offset       int32 `json:"offset"`
+}
+
+func (q *Queries) ListDoctorsBySpecialityID(ctx context.Context, arg ListDoctorsBySpecialityIDParams) ([]Doctor, error) {
+	rows, err := q.db.QueryContext(ctx, listDoctorsBySpecialityID, arg.SpecialityID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Doctor{}
+	for rows.Next() {
+		var i Doctor
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Username,
+			&i.Password,
+			&i.HospitalID,
+			&i.ResidentAddress,
+			&i.CheckupTimeID,
+			&i.IsOnLeave,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listSpecialitiesByDoctorID = `-- name: ListSpecialitiesByDoctorID :many
+SELECT s.id, s.speciality_name
+FROM DoctorSpeciality ds
+JOIN Speciality s ON ds.speciality_id = s.id
+WHERE ds.docter_id = ?
+ORDER BY s.speciality_name
+`
+
+func (q *Queries) ListSpecialitiesByDoctorID(ctx context.Context, docterID int32) ([]Speciality, error) {
+	rows, err := q.db.QueryContext(ctx, listSpecialitiesByDoctorID, docterID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Speciality{}
+	for rows.Next() {
+		var i Speciality
+		if err := rows.Scan(&i.ID, &i.SpecialityName); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateDoctorSpeciality = `-- name: UpdateDoctorSpeciality :exec
 UPDATE DoctorSpeciality SET speciality_id = ?, docter_id = ? WHERE id = ?
 `

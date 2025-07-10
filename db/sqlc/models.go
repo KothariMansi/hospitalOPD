@@ -75,11 +75,10 @@ type Doctor struct {
 	Password        string         `json:"password"`
 	HospitalID      int32          `json:"hospital_id"`
 	ResidentAddress sql.NullString `json:"resident_address"`
-	Ismorning       sql.NullBool   `json:"ismorning"`
-	Isevening       sql.NullBool   `json:"isevening"`
-	Isnight         sql.NullBool   `json:"isnight"`
 	CheckupTimeID   int32          `json:"checkup_time_id"`
-	Isonleave       sql.NullBool   `json:"isonleave"`
+	IsOnLeave       sql.NullBool   `json:"is_on_leave"`
+	CreatedAt       sql.NullTime   `json:"created_at"`
+	UpdatedAt       sql.NullTime   `json:"updated_at"`
 }
 
 type Doctorspeciality struct {
