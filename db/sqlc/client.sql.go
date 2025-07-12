@@ -46,7 +46,7 @@ const deleteClient = `-- name: DeleteClient :exec
 DELETE FROM Client WHERE id = ?
 `
 
-func (q *Queries) DeleteClient(ctx context.Context, id int32) error {
+func (q *Queries) DeleteClient(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteClient, id)
 	return err
 }
@@ -55,7 +55,7 @@ const getClient = `-- name: GetClient :one
 SELECT id, name, state, city, age FROM Client WHERE id = ?
 `
 
-func (q *Queries) GetClient(ctx context.Context, id int32) (Client, error) {
+func (q *Queries) GetClient(ctx context.Context, id int64) (Client, error) {
 	row := q.db.QueryRowContext(ctx, getClient, id)
 	var i Client
 	err := row.Scan(
@@ -205,7 +205,7 @@ type UpdateClientParams struct {
 	State string `json:"state"`
 	City  string `json:"city"`
 	Age   int32  `json:"age"`
-	ID    int32  `json:"id"`
+	ID    int64  `json:"id"`
 }
 
 func (q *Queries) UpdateClient(ctx context.Context, arg UpdateClientParams) error {

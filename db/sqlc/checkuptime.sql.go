@@ -29,7 +29,7 @@ const deleteCheckUpTime = `-- name: DeleteCheckUpTime :exec
 DELETE FROM CheckUpTime WHERE id = ?
 `
 
-func (q *Queries) DeleteCheckUpTime(ctx context.Context, id int32) error {
+func (q *Queries) DeleteCheckUpTime(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteCheckUpTime, id)
 	return err
 }
@@ -38,7 +38,7 @@ const getCheckUpTime = `-- name: GetCheckUpTime :one
 SELECT id, morning, evening, night FROM CheckUpTime WHERE id = ?
 `
 
-func (q *Queries) GetCheckUpTime(ctx context.Context, id int32) (Checkuptime, error) {
+func (q *Queries) GetCheckUpTime(ctx context.Context, id int64) (Checkuptime, error) {
 	row := q.db.QueryRowContext(ctx, getCheckUpTime, id)
 	var i Checkuptime
 	err := row.Scan(
@@ -51,11 +51,16 @@ func (q *Queries) GetCheckUpTime(ctx context.Context, id int32) (Checkuptime, er
 }
 
 const listCheckUpTimes = `-- name: ListCheckUpTimes :many
-SELECT id, morning, evening, night FROM CheckUpTime ORDER BY id
+SELECT id, morning, evening, night FROM CheckUpTime ORDER BY id LIMIT ? OFFSET ?
 `
 
-func (q *Queries) ListCheckUpTimes(ctx context.Context) ([]Checkuptime, error) {
-	rows, err := q.db.QueryContext(ctx, listCheckUpTimes)
+type ListCheckUpTimesParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListCheckUpTimes(ctx context.Context, arg ListCheckUpTimesParams) ([]Checkuptime, error) {
+	rows, err := q.db.QueryContext(ctx, listCheckUpTimes, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +95,7 @@ type UpdateCheckUpTimeParams struct {
 	Morning sql.NullTime `json:"morning"`
 	Evening sql.NullTime `json:"evening"`
 	Night   sql.NullTime `json:"night"`
-	ID      int32        `json:"id"`
+	ID      int64        `json:"id"`
 }
 
 func (q *Queries) UpdateCheckUpTime(ctx context.Context, arg UpdateCheckUpTimeParams) error {

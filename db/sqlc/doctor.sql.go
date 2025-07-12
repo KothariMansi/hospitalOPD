@@ -32,9 +32,9 @@ type CreateDoctorParams struct {
 	Name            string         `json:"name"`
 	Username        string         `json:"username"`
 	Password        string         `json:"password"`
-	HospitalID      int32          `json:"hospital_id"`
+	HospitalID      int64          `json:"hospital_id"`
 	ResidentAddress sql.NullString `json:"resident_address"`
-	CheckupTimeID   int32          `json:"checkup_time_id"`
+	CheckupTimeID   int64          `json:"checkup_time_id"`
 	IsOnLeave       sql.NullBool   `json:"is_on_leave"`
 }
 
@@ -54,7 +54,7 @@ const deleteDoctor = `-- name: DeleteDoctor :exec
 DELETE FROM Doctor WHERE id = ?
 `
 
-func (q *Queries) DeleteDoctor(ctx context.Context, id int32) error {
+func (q *Queries) DeleteDoctor(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteDoctor, id)
 	return err
 }
@@ -63,7 +63,7 @@ const getDoctor = `-- name: GetDoctor :one
 SELECT id, name, username, password, hospital_id, resident_address, checkup_time_id, is_on_leave, created_at, updated_at FROM Doctor WHERE id = ?
 `
 
-func (q *Queries) GetDoctor(ctx context.Context, id int32) (Doctor, error) {
+func (q *Queries) GetDoctor(ctx context.Context, id int64) (Doctor, error) {
 	row := q.db.QueryRowContext(ctx, getDoctor, id)
 	var i Doctor
 	err := row.Scan(
@@ -150,7 +150,7 @@ LIMIT ? OFFSET ?
 `
 
 type ListDoctorsByHospitalParams struct {
-	HospitalID int32 `json:"hospital_id"`
+	HospitalID int64 `json:"hospital_id"`
 	Limit      int32 `json:"limit"`
 	Offset     int32 `json:"offset"`
 }
@@ -253,14 +253,14 @@ type ListDoctorsWithHospitalParams struct {
 }
 
 type ListDoctorsWithHospitalRow struct {
-	ID              int32          `json:"id"`
+	ID              int64          `json:"id"`
 	Name            string         `json:"name"`
 	Username        string         `json:"username"`
 	Password        string         `json:"password"`
-	HospitalID      int32          `json:"hospital_id"`
+	HospitalID      int64          `json:"hospital_id"`
 	HospitalName    string         `json:"hospital_name"`
 	ResidentAddress sql.NullString `json:"resident_address"`
-	CheckupTimeID   int32          `json:"checkup_time_id"`
+	CheckupTimeID   int64          `json:"checkup_time_id"`
 	IsOnLeave       sql.NullBool   `json:"is_on_leave"`
 	CreatedAt       sql.NullTime   `json:"created_at"`
 	UpdatedAt       sql.NullTime   `json:"updated_at"`
@@ -364,11 +364,11 @@ type UpdateDoctorParams struct {
 	Name            string         `json:"name"`
 	Username        string         `json:"username"`
 	Password        string         `json:"password"`
-	HospitalID      int32          `json:"hospital_id"`
+	HospitalID      int64          `json:"hospital_id"`
 	ResidentAddress sql.NullString `json:"resident_address"`
-	CheckupTimeID   int32          `json:"checkup_time_id"`
+	CheckupTimeID   int64          `json:"checkup_time_id"`
 	IsOnLeave       sql.NullBool   `json:"is_on_leave"`
-	ID              int32          `json:"id"`
+	ID              int64          `json:"id"`
 }
 
 func (q *Queries) UpdateDoctor(ctx context.Context, arg UpdateDoctorParams) error {

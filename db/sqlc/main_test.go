@@ -7,20 +7,21 @@ import (
 	"testing"
 
 	"github.com/KothariMansi/hospitalOPD/db/util"
+	_ "github.com/go-sql-driver/mysql"
 )
 
-var testqueries *Queries
-var testdb *sql.DB
+var testQueries *Queries
+var testDb *sql.DB
 
 func TestMain(m *testing.M) {
 	config, err := util.LoadConfig("../..")
 	if err != nil {
-		log.Fatal("Cannot load configuration:", err)
+		log.Fatal("Cannot load configurations:", err)
 	}
-	testdb, err = sql.Open(config.DBDriver, config.DBSource)
+	testDb, err = sql.Open(config.DBDriver, config.DBSource)
 	if err != nil {
 		log.Fatal("cannot connect to db:", err)
 	}
-	testqueries = New(testdb)
+	testQueries = New(testDb)
 	os.Exit(m.Run())
 }

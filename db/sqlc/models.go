@@ -54,14 +54,14 @@ func (ns NullUserGender) Value() (driver.Value, error) {
 }
 
 type Checkuptime struct {
-	ID      int32        `json:"id"`
+	ID      int64        `json:"id"`
 	Morning sql.NullTime `json:"morning"`
 	Evening sql.NullTime `json:"evening"`
 	Night   sql.NullTime `json:"night"`
 }
 
 type Client struct {
-	ID    int32  `json:"id"`
+	ID    int64  `json:"id"`
 	Name  string `json:"name"`
 	State string `json:"state"`
 	City  string `json:"city"`
@@ -69,36 +69,36 @@ type Client struct {
 }
 
 type Doctor struct {
-	ID              int32          `json:"id"`
+	ID              int64          `json:"id"`
 	Name            string         `json:"name"`
 	Username        string         `json:"username"`
 	Password        string         `json:"password"`
-	HospitalID      int32          `json:"hospital_id"`
+	HospitalID      int64          `json:"hospital_id"`
 	ResidentAddress sql.NullString `json:"resident_address"`
-	CheckupTimeID   int32          `json:"checkup_time_id"`
+	CheckupTimeID   int64          `json:"checkup_time_id"`
 	IsOnLeave       sql.NullBool   `json:"is_on_leave"`
 	CreatedAt       sql.NullTime   `json:"created_at"`
 	UpdatedAt       sql.NullTime   `json:"updated_at"`
 }
 
 type Doctorspeciality struct {
-	ID           int32 `json:"id"`
-	SpecialityID int32 `json:"speciality_id"`
-	DocterID     int32 `json:"docter_id"`
+	ID           int64 `json:"id"`
+	SpecialityID int64 `json:"speciality_id"`
+	DocterID     int64 `json:"docter_id"`
 }
 
 type Emergencyline struct {
 	ID          int32        `json:"id"`
 	RegTime     sql.NullTime `json:"reg_time"`
-	TokenNumber int32        `json:"token_number"`
-	ClientID    int32        `json:"client_id"`
-	DoctorID    int32        `json:"doctor_id"`
+	TokenNumber int64        `json:"token_number"`
+	ClientID    int64        `json:"client_id"`
+	DoctorID    int64        `json:"doctor_id"`
 	Ischecked   bool         `json:"ischecked"`
 	CheckedTime sql.NullTime `json:"checked_time"`
 }
 
 type Hospital struct {
-	ID      int32          `json:"id"`
+	ID      int64          `json:"id"`
 	Name    string         `json:"name"`
 	Photo   sql.NullString `json:"photo"`
 	State   string         `json:"state"`
@@ -108,22 +108,22 @@ type Hospital struct {
 }
 
 type Opdline struct {
-	ID          int32        `json:"id"`
+	ID          int64        `json:"id"`
 	RegTime     sql.NullTime `json:"reg_time"`
 	TokenNumber int32        `json:"token_number"`
-	ClientID    int32        `json:"client_id"`
-	DoctorID    int32        `json:"doctor_id"`
+	ClientID    int64        `json:"client_id"`
+	DoctorID    int64        `json:"doctor_id"`
 	Ischecked   bool         `json:"ischecked"`
 	CheckedTime sql.NullTime `json:"checked_time"`
 }
 
 type Speciality struct {
-	ID             int32  `json:"id"`
+	ID             int64  `json:"id"`
 	SpecialityName string `json:"speciality_name"`
 }
 
 type User struct {
-	ID       int32         `json:"id"`
+	ID       int64         `json:"id"`
 	Name     string        `json:"name"`
 	Password string        `json:"password"`
 	State    string        `json:"state"`

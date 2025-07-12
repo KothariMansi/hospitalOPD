@@ -16,8 +16,8 @@ VALUES (?, ?)
 `
 
 type CreateDoctorSpecialityParams struct {
-	SpecialityID int32 `json:"speciality_id"`
-	DocterID     int32 `json:"docter_id"`
+	SpecialityID int64 `json:"speciality_id"`
+	DocterID     int64 `json:"docter_id"`
 }
 
 func (q *Queries) CreateDoctorSpeciality(ctx context.Context, arg CreateDoctorSpecialityParams) (sql.Result, error) {
@@ -28,7 +28,7 @@ const deleteDoctorSpeciality = `-- name: DeleteDoctorSpeciality :exec
 DELETE FROM DoctorSpeciality WHERE id = ?
 `
 
-func (q *Queries) DeleteDoctorSpeciality(ctx context.Context, id int32) error {
+func (q *Queries) DeleteDoctorSpeciality(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteDoctorSpeciality, id)
 	return err
 }
@@ -37,7 +37,7 @@ const getDoctorSpeciality = `-- name: GetDoctorSpeciality :one
 SELECT id, speciality_id, docter_id FROM DoctorSpeciality WHERE id = ?
 `
 
-func (q *Queries) GetDoctorSpeciality(ctx context.Context, id int32) (Doctorspeciality, error) {
+func (q *Queries) GetDoctorSpeciality(ctx context.Context, id int64) (Doctorspeciality, error) {
 	row := q.db.QueryRowContext(ctx, getDoctorSpeciality, id)
 	var i Doctorspeciality
 	err := row.Scan(&i.ID, &i.SpecialityID, &i.DocterID)
@@ -86,7 +86,7 @@ LIMIT ? OFFSET ?
 `
 
 type ListDoctorsBySpecialityIDParams struct {
-	SpecialityID int32 `json:"speciality_id"`
+	SpecialityID int64 `json:"speciality_id"`
 	Limit        int32 `json:"limit"`
 	Offset       int32 `json:"offset"`
 }
@@ -133,7 +133,7 @@ WHERE ds.docter_id = ?
 ORDER BY s.speciality_name
 `
 
-func (q *Queries) ListSpecialitiesByDoctorID(ctx context.Context, docterID int32) ([]Speciality, error) {
+func (q *Queries) ListSpecialitiesByDoctorID(ctx context.Context, docterID int64) ([]Speciality, error) {
 	rows, err := q.db.QueryContext(ctx, listSpecialitiesByDoctorID, docterID)
 	if err != nil {
 		return nil, err
@@ -161,9 +161,9 @@ UPDATE DoctorSpeciality SET speciality_id = ?, docter_id = ? WHERE id = ?
 `
 
 type UpdateDoctorSpecialityParams struct {
-	SpecialityID int32 `json:"speciality_id"`
-	DocterID     int32 `json:"docter_id"`
-	ID           int32 `json:"id"`
+	SpecialityID int64 `json:"speciality_id"`
+	DocterID     int64 `json:"docter_id"`
+	ID           int64 `json:"id"`
 }
 
 func (q *Queries) UpdateDoctorSpeciality(ctx context.Context, arg UpdateDoctorSpecialityParams) error {

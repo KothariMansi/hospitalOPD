@@ -18,8 +18,8 @@ VALUES (?, ?, ?, ?, ?, ?)
 type CreateOPDLineParams struct {
 	RegTime     sql.NullTime `json:"reg_time"`
 	TokenNumber int32        `json:"token_number"`
-	ClientID    int32        `json:"client_id"`
-	DoctorID    int32        `json:"doctor_id"`
+	ClientID    int64        `json:"client_id"`
+	DoctorID    int64        `json:"doctor_id"`
 	Ischecked   bool         `json:"ischecked"`
 	CheckedTime sql.NullTime `json:"checked_time"`
 }
@@ -39,7 +39,7 @@ const deleteOPDLine = `-- name: DeleteOPDLine :exec
 DELETE FROM OPDLine WHERE id = ?
 `
 
-func (q *Queries) DeleteOPDLine(ctx context.Context, id int32) error {
+func (q *Queries) DeleteOPDLine(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteOPDLine, id)
 	return err
 }
@@ -48,7 +48,7 @@ const getOPDLine = `-- name: GetOPDLine :one
 SELECT id, reg_time, token_number, client_id, doctor_id, ischecked, checked_time FROM OPDLine WHERE id = ?
 `
 
-func (q *Queries) GetOPDLine(ctx context.Context, id int32) (Opdline, error) {
+func (q *Queries) GetOPDLine(ctx context.Context, id int64) (Opdline, error) {
 	row := q.db.QueryRowContext(ctx, getOPDLine, id)
 	var i Opdline
 	err := row.Scan(
@@ -121,7 +121,7 @@ type ListOPDWithDetailsParams struct {
 }
 
 type ListOPDWithDetailsRow struct {
-	ID          int32        `json:"id"`
+	ID          int64        `json:"id"`
 	RegTime     sql.NullTime `json:"reg_time"`
 	TokenNumber int32        `json:"token_number"`
 	Ischecked   bool         `json:"ischecked"`
@@ -170,11 +170,11 @@ WHERE id = ?
 type UpdateOPDLineParams struct {
 	RegTime     sql.NullTime `json:"reg_time"`
 	TokenNumber int32        `json:"token_number"`
-	ClientID    int32        `json:"client_id"`
-	DoctorID    int32        `json:"doctor_id"`
+	ClientID    int64        `json:"client_id"`
+	DoctorID    int64        `json:"doctor_id"`
 	Ischecked   bool         `json:"ischecked"`
 	CheckedTime sql.NullTime `json:"checked_time"`
-	ID          int32        `json:"id"`
+	ID          int64        `json:"id"`
 }
 
 func (q *Queries) UpdateOPDLine(ctx context.Context, arg UpdateOPDLineParams) error {

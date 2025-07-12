@@ -28,9 +28,9 @@ VALUES (?, ?, ?, ?, ?, ?)
 
 type CreateEmergencyLineParams struct {
 	RegTime     sql.NullTime `json:"reg_time"`
-	TokenNumber int32        `json:"token_number"`
-	ClientID    int32        `json:"client_id"`
-	DoctorID    int32        `json:"doctor_id"`
+	TokenNumber int64        `json:"token_number"`
+	ClientID    int64        `json:"client_id"`
+	DoctorID    int64        `json:"doctor_id"`
 	Ischecked   bool         `json:"ischecked"`
 	CheckedTime sql.NullTime `json:"checked_time"`
 }
@@ -134,7 +134,7 @@ type ListEmergencyWithDetailsParams struct {
 type ListEmergencyWithDetailsRow struct {
 	ID          int32        `json:"id"`
 	RegTime     sql.NullTime `json:"reg_time"`
-	TokenNumber int32        `json:"token_number"`
+	TokenNumber int64        `json:"token_number"`
 	Ischecked   bool         `json:"ischecked"`
 	CheckedTime sql.NullTime `json:"checked_time"`
 	ClientName  string       `json:"client_name"`
@@ -180,9 +180,9 @@ WHERE id = ?
 
 type UpdateEmergencyLineParams struct {
 	RegTime     sql.NullTime `json:"reg_time"`
-	TokenNumber int32        `json:"token_number"`
-	ClientID    int32        `json:"client_id"`
-	DoctorID    int32        `json:"doctor_id"`
+	TokenNumber int64        `json:"token_number"`
+	ClientID    int64        `json:"client_id"`
+	DoctorID    int64        `json:"doctor_id"`
 	Ischecked   bool         `json:"ischecked"`
 	CheckedTime sql.NullTime `json:"checked_time"`
 	ID          int32        `json:"id"`

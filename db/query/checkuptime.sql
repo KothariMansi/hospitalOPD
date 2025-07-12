@@ -6,7 +6,7 @@ VALUES (?, ?, ?);
 SELECT * FROM CheckUpTime WHERE id = ?;
 
 -- name: ListCheckUpTimes :many
-SELECT * FROM CheckUpTime ORDER BY id;
+SELECT * FROM CheckUpTime ORDER BY id LIMIT ? OFFSET ?;
 
 -- name: UpdateCheckUpTime :exec
 UPDATE CheckUpTime SET morning = ?, evening = ?, night = ? WHERE id = ?;

@@ -34,7 +34,7 @@ const deleteSpeciality = `-- name: DeleteSpeciality :exec
 DELETE FROM Speciality WHERE id = ?
 `
 
-func (q *Queries) DeleteSpeciality(ctx context.Context, id int32) error {
+func (q *Queries) DeleteSpeciality(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteSpeciality, id)
 	return err
 }
@@ -43,7 +43,7 @@ const getSpeciality = `-- name: GetSpeciality :one
 SELECT id, speciality_name FROM Speciality WHERE id = ?
 `
 
-func (q *Queries) GetSpeciality(ctx context.Context, id int32) (Speciality, error) {
+func (q *Queries) GetSpeciality(ctx context.Context, id int64) (Speciality, error) {
 	row := q.db.QueryRowContext(ctx, getSpeciality, id)
 	var i Speciality
 	err := row.Scan(&i.ID, &i.SpecialityName)
@@ -124,7 +124,7 @@ UPDATE Speciality SET speciality_name = ? WHERE id = ?
 
 type UpdateSpecialityParams struct {
 	SpecialityName string `json:"speciality_name"`
-	ID             int32  `json:"id"`
+	ID             int64  `json:"id"`
 }
 
 func (q *Queries) UpdateSpeciality(ctx context.Context, arg UpdateSpecialityParams) error {

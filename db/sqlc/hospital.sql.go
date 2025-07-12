@@ -50,7 +50,7 @@ const deleteHospital = `-- name: DeleteHospital :exec
 DELETE FROM Hospital WHERE id = ?
 `
 
-func (q *Queries) DeleteHospital(ctx context.Context, id int32) error {
+func (q *Queries) DeleteHospital(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteHospital, id)
 	return err
 }
@@ -59,7 +59,7 @@ const getHospital = `-- name: GetHospital :one
 SELECT id, name, photo, state, city, address, phone FROM Hospital WHERE id = ?
 `
 
-func (q *Queries) GetHospital(ctx context.Context, id int32) (Hospital, error) {
+func (q *Queries) GetHospital(ctx context.Context, id int64) (Hospital, error) {
 	row := q.db.QueryRowContext(ctx, getHospital, id)
 	var i Hospital
 	err := row.Scan(
@@ -221,7 +221,7 @@ type UpdateHospitalParams struct {
 	City    string         `json:"city"`
 	Address string         `json:"address"`
 	Phone   sql.NullString `json:"phone"`
-	ID      int32          `json:"id"`
+	ID      int64          `json:"id"`
 }
 
 func (q *Queries) UpdateHospital(ctx context.Context, arg UpdateHospitalParams) error {
