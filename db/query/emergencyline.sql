@@ -29,3 +29,15 @@ JOIN Client c ON e.client_id = c.id
 JOIN Doctor d ON e.doctor_id = d.id
 ORDER BY e.reg_time DESC
 LIMIT ? OFFSET ?;
+
+-- name: SearchEmergencyByDate :many
+SELECT 
+  e.id, e.reg_time, e.token_number, e.isChecked, e.checked_time,
+  c.name AS client_name,
+  d.name AS doctor_name
+FROM EmergencyLine e
+JOIN Client c ON e.client_id = c.id
+JOIN Doctor d ON e.doctor_id = d.id
+WHERE e.reg_time BETWEEN ? AND ?
+ORDER BY e.reg_time DESC
+LIMIT ? OFFSET ?;

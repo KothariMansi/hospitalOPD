@@ -172,6 +172,72 @@ func (q *Queries) ListEmergencyWithDetails(ctx context.Context, arg ListEmergenc
 	return items, nil
 }
 
+const searchEmergencyByDate = `-- name: SearchEmergencyByDate :many
+SELECT 
+  e.id, e.reg_time, e.token_number, e.isChecked, e.checked_time,
+  c.name AS client_name,
+  d.name AS doctor_name
+FROM EmergencyLine e
+JOIN Client c ON e.client_id = c.id
+JOIN Doctor d ON e.doctor_id = d.id
+WHERE e.reg_time BETWEEN ? AND ?
+ORDER BY e.reg_time DESC
+LIMIT ? OFFSET ?
+`
+
+type SearchEmergencyByDateParams struct {
+	FromRegTime sql.NullTime `json:"from_reg_time"`
+	ToRegTime   sql.NullTime `json:"to_reg_time"`
+	Limit       int32        `json:"limit"`
+	Offset      int32        `json:"offset"`
+}
+
+type SearchEmergencyByDateRow struct {
+	ID          int64        `json:"id"`
+	RegTime     sql.NullTime `json:"reg_time"`
+	TokenNumber int64        `json:"token_number"`
+	Ischecked   bool         `json:"ischecked"`
+	CheckedTime sql.NullTime `json:"checked_time"`
+	ClientName  string       `json:"client_name"`
+	DoctorName  string       `json:"doctor_name"`
+}
+
+func (q *Queries) SearchEmergencyByDate(ctx context.Context, arg SearchEmergencyByDateParams) ([]SearchEmergencyByDateRow, error) {
+	rows, err := q.db.QueryContext(ctx, searchEmergencyByDate,
+		arg.FromRegTime,
+		arg.ToRegTime,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SearchEmergencyByDateRow{}
+	for rows.Next() {
+		var i SearchEmergencyByDateRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.RegTime,
+			&i.TokenNumber,
+			&i.Ischecked,
+			&i.CheckedTime,
+			&i.ClientName,
+			&i.DoctorName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateEmergencyLine = `-- name: UpdateEmergencyLine :exec
 UPDATE EmergencyLine SET
   reg_time = ?, token_number = ?, client_id = ?, doctor_id = ?, isChecked = ?, checked_time = ?

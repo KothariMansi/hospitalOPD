@@ -161,6 +161,72 @@ func (q *Queries) ListOPDWithDetails(ctx context.Context, arg ListOPDWithDetails
 	return items, nil
 }
 
+const searchOPDByDate = `-- name: SearchOPDByDate :many
+SELECT 
+  o.id, o.reg_time, o.token_number, o.isChecked, o.checked_time,
+  c.name AS client_name,
+  d.name AS doctor_name
+FROM OPDLine o
+JOIN Client c ON o.client_id = c.id
+JOIN Doctor d ON o.doctor_id = d.id
+WHERE o.reg_time BETWEEN ? AND ?
+ORDER BY o.reg_time DESC
+LIMIT ? OFFSET ?
+`
+
+type SearchOPDByDateParams struct {
+	FromRegTime sql.NullTime `json:"from_reg_time"`
+	ToRegTime   sql.NullTime `json:"to_reg_time"`
+	Limit       int32        `json:"limit"`
+	Offset      int32        `json:"offset"`
+}
+
+type SearchOPDByDateRow struct {
+	ID          int64        `json:"id"`
+	RegTime     sql.NullTime `json:"reg_time"`
+	TokenNumber int32        `json:"token_number"`
+	Ischecked   bool         `json:"ischecked"`
+	CheckedTime sql.NullTime `json:"checked_time"`
+	ClientName  string       `json:"client_name"`
+	DoctorName  string       `json:"doctor_name"`
+}
+
+func (q *Queries) SearchOPDByDate(ctx context.Context, arg SearchOPDByDateParams) ([]SearchOPDByDateRow, error) {
+	rows, err := q.db.QueryContext(ctx, searchOPDByDate,
+		arg.FromRegTime,
+		arg.ToRegTime,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SearchOPDByDateRow{}
+	for rows.Next() {
+		var i SearchOPDByDateRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.RegTime,
+			&i.TokenNumber,
+			&i.Ischecked,
+			&i.CheckedTime,
+			&i.ClientName,
+			&i.DoctorName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateOPDLine = `-- name: UpdateOPDLine :exec
 UPDATE OPDLine SET
   reg_time = ?, token_number = ?, client_id = ?, doctor_id = ?, isChecked = ?, checked_time = ?

@@ -142,3 +142,30 @@ func TestListEmergencyWithDetails(t *testing.T) {
 		require.NotEmpty(t, r.DoctorName)
 	}
 }
+
+func TestSearchEmergencyByDate(t *testing.T) {
+	// Create some records
+	for i := 0; i < 3; i++ {
+		CreateAndGetEmergencyLine(t)
+	}
+
+	// Time range
+	start := time.Now().Add(-1 * time.Hour)
+	end := time.Now().Add(1 * time.Hour)
+
+	// Search
+	emergencies, err := testQueries.SearchEmergencyByDate(context.Background(), SearchEmergencyByDateParams{
+		FromRegTime: sql.NullTime{Time: start, Valid: true},
+		ToRegTime:   sql.NullTime{Time: end, Valid: true},
+		Limit:       5,
+		Offset:      0,
+	})
+	require.NoError(t, err)
+	require.NotEmpty(t, emergencies)
+
+	for _, e := range emergencies {
+		require.WithinDuration(t, start, e.RegTime.Time, time.Hour*2)
+		require.NotEmpty(t, e.ClientName)
+		require.NotEmpty(t, e.DoctorName)
+	}
+}

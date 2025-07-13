@@ -126,3 +126,29 @@ func TestListOPDWithDetails(t *testing.T) {
 		require.NotEmpty(t, row.DoctorName)
 	}
 }
+
+func TestSearchOPDByDate(t *testing.T) {
+	// Create test OPD records
+	for i := 0; i < 3; i++ {
+		CreateAndGetOPDLine(t)
+	}
+
+	start := time.Now().Add(-2 * time.Hour)
+	end := time.Now().Add(2 * time.Hour)
+
+	// Execute search query
+	opdList, err := testQueries.SearchOPDByDate(context.Background(), SearchOPDByDateParams{
+		FromRegTime: sql.NullTime{Time: start, Valid: true},
+		ToRegTime:   sql.NullTime{Time: end, Valid: true},
+		Limit:       5,
+		Offset:      0,
+	})
+	require.NoError(t, err)
+	require.NotEmpty(t, opdList)
+
+	for _, o := range opdList {
+		require.WithinDuration(t, start, o.RegTime.Time, 2*time.Hour)
+		require.NotEmpty(t, o.ClientName)
+		require.NotEmpty(t, o.DoctorName)
+	}
+}

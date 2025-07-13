@@ -27,3 +27,14 @@ JOIN Doctor d ON o.doctor_id = d.id
 ORDER BY o.reg_time DESC
 LIMIT ? OFFSET ?;
 
+-- name: SearchOPDByDate :many
+SELECT 
+  o.id, o.reg_time, o.token_number, o.isChecked, o.checked_time,
+  c.name AS client_name,
+  d.name AS doctor_name
+FROM OPDLine o
+JOIN Client c ON o.client_id = c.id
+JOIN Doctor d ON o.doctor_id = d.id
+WHERE o.reg_time BETWEEN ? AND ?
+ORDER BY o.reg_time DESC
+LIMIT ? OFFSET ?;
