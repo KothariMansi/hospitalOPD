@@ -105,11 +105,17 @@ func (q *Queries) GetDoctorByUsername(ctx context.Context, username string) (Doc
 }
 
 const listDoctors = `-- name: ListDoctors :many
-SELECT id, name, username, password, hospital_id, resident_address, checkup_time_id, is_on_leave, created_at, updated_at FROM Doctor ORDER BY id
+SELECT id, name, username, password, hospital_id, resident_address, checkup_time_id, is_on_leave, created_at, updated_at FROM Doctor ORDER BY hospital_id
+LIMIT ? OFFSET ?
 `
 
-func (q *Queries) ListDoctors(ctx context.Context) ([]Doctor, error) {
-	rows, err := q.db.QueryContext(ctx, listDoctors)
+type ListDoctorsParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListDoctors(ctx context.Context, arg ListDoctorsParams) ([]Doctor, error) {
+	rows, err := q.db.QueryContext(ctx, listDoctors, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

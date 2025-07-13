@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"testing"
 
 	"github.com/KothariMansi/hospitalOPD/db/util"
@@ -88,4 +89,80 @@ func TestDeleteUser(t *testing.T) {
 	deleted, err := testQueries.GetUser(context.Background(), user.ID)
 	require.Error(t, err)
 	require.Empty(t, deleted)
+}
+
+func TestCountUsers(t *testing.T) {
+	for i := 0; i < 3; i++ {
+		CreateAndGetUser(t)
+	}
+
+	count, err := testQueries.CountUsers(context.Background())
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, count, int64(3))
+}
+
+func TestSearchUsersByName(t *testing.T) {
+	targetName := "TestUser_" + util.RandomString(4)
+	for i := 0; i < 3; i++ {
+		_, err := testQueries.CreateUser(context.Background(), CreateUserParams{
+			Name:     fmt.Sprintf("%s_%d", targetName, i),
+			Password: util.RandomPassword(),
+			State:    util.RandomState(),
+			City:     util.RandomCity(),
+			Gender:   "MALE",
+			Age:      util.SqlNullAge(util.RandomAge()),
+		})
+		require.NoError(t, err)
+	}
+
+	// Add noise
+	for i := 0; i < 2; i++ {
+		CreateAndGetUser(t)
+	}
+
+	users, err := testQueries.SearchUsersByName(context.Background(), SearchUsersByNameParams{
+		Name:   targetName + "%",
+		Limit:  10,
+		Offset: 0,
+	})
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, len(users), 3)
+	for _, user := range users {
+		require.Contains(t, user.Name, targetName)
+	}
+}
+
+func TestListUsersByGenderAndCity(t *testing.T) {
+	city := "TestCity_" + util.RandomString(4)
+	gender := "FEMALE"
+
+	for i := 0; i < 3; i++ {
+		_, err := testQueries.CreateUser(context.Background(), CreateUserParams{
+			Name:     util.RandomName(),
+			Password: util.RandomPassword(),
+			State:    util.RandomState(),
+			City:     city,
+			Gender:   UserGender(gender),
+			Age:      util.SqlNullAge(util.RandomAge()),
+		})
+		require.NoError(t, err)
+	}
+
+	// Add noise
+	for i := 0; i < 2; i++ {
+		CreateAndGetUser(t)
+	}
+
+	users, err := testQueries.ListUsersByGenderAndCity(context.Background(), ListUsersByGenderAndCityParams{
+		Gender: UserGender(gender),
+		City:   city,
+		Limit:  10,
+		Offset: 0,
+	})
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, len(users), 3)
+	for _, user := range users {
+		require.Equal(t, gender, string(user.Gender))
+		require.Equal(t, city, user.City)
+	}
 }

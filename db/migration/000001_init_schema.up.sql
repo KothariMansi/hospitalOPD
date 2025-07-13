@@ -74,7 +74,7 @@ CREATE TABLE `OPDLine` (
 );
 
 CREATE TABLE `EmergencyLine` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
   `reg_time` DATETIME,
   `token_number` BIGINT NOT NULL,
   `client_id` BIGINT NOT NULL,

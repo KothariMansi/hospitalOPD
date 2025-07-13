@@ -1,6 +1,7 @@
 package util
 
 import (
+	"database/sql"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -80,4 +81,8 @@ func RandomAddress() string {
 // RandomPhotoName returns a dummy image filename
 func RandomPhotoName() string {
 	return fmt.Sprintf("%s.jpg", RandomString(6))
+}
+
+func SqlNullAge(age int32) sql.NullInt32 {
+	return sql.NullInt32{Int32: age, Valid: true}
 }

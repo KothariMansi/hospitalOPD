@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/KothariMansi/hospitalOPD/db/util"
@@ -67,4 +68,38 @@ func TestDeleteSpeciality(t *testing.T) {
 	deleted, err := testQueries.GetSpeciality(context.Background(), spec.ID)
 	require.Error(t, err)
 	require.Empty(t, deleted)
+}
+
+func TestCountSpecialities(t *testing.T) {
+	for i := 0; i < 3; i++ {
+		CreateAndGetSpeciality(t)
+	}
+
+	count, err := testQueries.CountSpecialities(context.Background())
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, count, int64(3))
+}
+
+func TestSearchSpecialitiesByName(t *testing.T) {
+	prefix := "TestSpec_" + util.RandomString(3)
+	for i := 0; i < 3; i++ {
+		_, err := testQueries.CreateSpeciality(context.Background(), fmt.Sprintf("%s_%d", prefix, i))
+		require.NoError(t, err)
+	}
+
+	// Add noise
+	for i := 0; i < 2; i++ {
+		CreateAndGetSpeciality(t)
+	}
+
+	specialities, err := testQueries.SearchSpecialitiesByName(context.Background(), SearchSpecialitiesByNameParams{
+		SpecialityName: prefix + "%",
+		Limit:          10,
+		Offset:         0,
+	})
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, len(specialities), 3)
+	for _, s := range specialities {
+		require.Contains(t, s.SpecialityName, prefix)
+	}
 }

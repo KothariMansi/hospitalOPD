@@ -50,7 +50,7 @@ const deleteEmergencyLine = `-- name: DeleteEmergencyLine :exec
 DELETE FROM EmergencyLine WHERE id = ?
 `
 
-func (q *Queries) DeleteEmergencyLine(ctx context.Context, id int32) error {
+func (q *Queries) DeleteEmergencyLine(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteEmergencyLine, id)
 	return err
 }
@@ -59,7 +59,7 @@ const getEmergencyLine = `-- name: GetEmergencyLine :one
 SELECT id, reg_time, token_number, client_id, doctor_id, ischecked, checked_time FROM EmergencyLine WHERE id = ?
 `
 
-func (q *Queries) GetEmergencyLine(ctx context.Context, id int32) (Emergencyline, error) {
+func (q *Queries) GetEmergencyLine(ctx context.Context, id int64) (Emergencyline, error) {
 	row := q.db.QueryRowContext(ctx, getEmergencyLine, id)
 	var i Emergencyline
 	err := row.Scan(
@@ -132,7 +132,7 @@ type ListEmergencyWithDetailsParams struct {
 }
 
 type ListEmergencyWithDetailsRow struct {
-	ID          int32        `json:"id"`
+	ID          int64        `json:"id"`
 	RegTime     sql.NullTime `json:"reg_time"`
 	TokenNumber int64        `json:"token_number"`
 	Ischecked   bool         `json:"ischecked"`
@@ -185,7 +185,7 @@ type UpdateEmergencyLineParams struct {
 	DoctorID    int64        `json:"doctor_id"`
 	Ischecked   bool         `json:"ischecked"`
 	CheckedTime sql.NullTime `json:"checked_time"`
-	ID          int32        `json:"id"`
+	ID          int64        `json:"id"`
 }
 
 func (q *Queries) UpdateEmergencyLine(ctx context.Context, arg UpdateEmergencyLineParams) error {

@@ -8,7 +8,8 @@ INSERT INTO Doctor (
 SELECT * FROM Doctor WHERE id = ?;
 
 -- name: ListDoctors :many
-SELECT * FROM Doctor ORDER BY id;
+SELECT * FROM Doctor ORDER BY hospital_id
+LIMIT ? OFFSET ?;
 
 -- name: UpdateDoctor :exec
 UPDATE Doctor SET

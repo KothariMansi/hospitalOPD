@@ -88,7 +88,7 @@ type Doctorspeciality struct {
 }
 
 type Emergencyline struct {
-	ID          int32        `json:"id"`
+	ID          int64        `json:"id"`
 	RegTime     sql.NullTime `json:"reg_time"`
 	TokenNumber int64        `json:"token_number"`
 	ClientID    int64        `json:"client_id"`

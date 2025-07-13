@@ -2,13 +2,14 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/KothariMansi/hospitalOPD/db/util"
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomClient(t *testing.T) Client {
+func CreateAndGetClient(t *testing.T) Client {
 	arg := CreateClientParams{
 		Name:  util.RandomName(),
 		State: util.RandomState(),
@@ -29,7 +30,7 @@ func createRandomClient(t *testing.T) Client {
 }
 
 func TestCreateAndGetClient(t *testing.T) {
-	createRandomClient(t)
+	CreateAndGetClient(t)
 }
 
 func TestListClients(t *testing.T) {
@@ -52,7 +53,7 @@ func TestListClients(t *testing.T) {
 }
 
 func TestUpdateClient(t *testing.T) {
-	client := createRandomClient(t)
+	client := CreateAndGetClient(t)
 
 	newAge := util.RandomAge()
 	newCity := util.RandomCity()
@@ -75,7 +76,7 @@ func TestUpdateClient(t *testing.T) {
 }
 
 func TestDeleteClient(t *testing.T) {
-	client := createRandomClient(t)
+	client := CreateAndGetClient(t)
 
 	err := testQueries.DeleteClient(context.Background(), client.ID)
 	require.NoError(t, err)
@@ -83,4 +84,78 @@ func TestDeleteClient(t *testing.T) {
 	deleted, err := testQueries.GetClient(context.Background(), client.ID)
 	require.Error(t, err)
 	require.Empty(t, deleted)
+}
+
+func TestCountClients(t *testing.T) {
+	for i := 0; i < 5; i++ {
+		CreateAndGetClient(t)
+	}
+
+	count, err := testQueries.CountClients(context.Background())
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, count, int64(5))
+}
+
+func TestSearchClientsByName(t *testing.T) {
+	// Create unique pattern-based clients
+	targetName := "TestName_" + util.RandomString(3)
+	for i := 0; i < 3; i++ {
+		_, err := testQueries.CreateClient(context.Background(), CreateClientParams{
+			Name:  fmt.Sprintf("%s_%d", targetName, i),
+			State: util.RandomState(),
+			City:  util.RandomCity(),
+			Age:   util.RandomAge(),
+		})
+		require.NoError(t, err)
+	}
+
+	// Add some noise
+	for i := 0; i < 2; i++ {
+		CreateAndGetClient(t)
+	}
+
+	clients, err := testQueries.SearchClientsByName(context.Background(), SearchClientsByNameParams{
+		Name:   targetName + "%",
+		Limit:  10,
+		Offset: 0,
+	})
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, len(clients), 3)
+	for _, client := range clients {
+		require.Contains(t, client.Name, targetName)
+	}
+}
+
+func TestListClientsByLocation(t *testing.T) {
+	state := "TestState_" + util.RandomString(4)
+	city := "TestCity_" + util.RandomString(4)
+
+	// Add matching clients
+	for i := 0; i < 3; i++ {
+		_, err := testQueries.CreateClient(context.Background(), CreateClientParams{
+			Name:  util.RandomName(),
+			State: state,
+			City:  city,
+			Age:   util.RandomAge(),
+		})
+		require.NoError(t, err)
+	}
+
+	// Add noise
+	for i := 0; i < 2; i++ {
+		CreateAndGetClient(t)
+	}
+
+	clients, err := testQueries.ListClientsByLocation(context.Background(), ListClientsByLocationParams{
+		City:   city,
+		State:  state,
+		Limit:  10,
+		Offset: 0,
+	})
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, len(clients), 3)
+	for _, client := range clients {
+		require.Equal(t, city, client.City)
+		require.Equal(t, state, client.State)
+	}
 }

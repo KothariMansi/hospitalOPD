@@ -3,7 +3,7 @@ INSERT INTO CheckUpTime (morning, evening, night)
 VALUES (?, ?, ?);
 
 -- name: GetCheckUpTime :one
-SELECT * FROM CheckUpTime WHERE id = ?;
+SELECT id, morning, evening, night FROM CheckUpTime WHERE id = ?;
 
 -- name: ListCheckUpTimes :many
 SELECT * FROM CheckUpTime ORDER BY id LIMIT ? OFFSET ?;

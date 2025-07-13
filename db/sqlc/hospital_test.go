@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"testing"
 
 	"github.com/KothariMansi/hospitalOPD/db/util"
@@ -91,4 +92,82 @@ func TestDeleteHospital(t *testing.T) {
 	deleted, err := testQueries.GetHospital(context.Background(), hospital.ID)
 	require.Error(t, err)
 	require.Empty(t, deleted)
+}
+
+func TestCountHospitals(t *testing.T) {
+	for i := 0; i < 3; i++ {
+		CreateAndGetHospital(t)
+	}
+
+	count, err := testQueries.CountHospitals(context.Background())
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, count, int64(3))
+}
+
+func TestSearchHospitalsByName(t *testing.T) {
+	prefix := "TestHosp_" + util.RandomString(4)
+
+	for i := 0; i < 3; i++ {
+		_, err := testQueries.CreateHospital(context.Background(), CreateHospitalParams{
+			Name:    fmt.Sprintf("%s_%d", prefix, i),
+			Photo:   sql.NullString{String: util.RandomString(8), Valid: true},
+			State:   util.RandomState(),
+			City:    util.RandomCity(),
+			Address: util.RandomString(20),
+			Phone:   sql.NullString{String: util.RandomPhone(), Valid: true},
+		})
+		require.NoError(t, err)
+	}
+
+	// Add noise
+	for i := 0; i < 2; i++ {
+		CreateAndGetHospital(t)
+	}
+
+	hospitals, err := testQueries.SearchHospitalsByName(context.Background(), SearchHospitalsByNameParams{
+		Name:   prefix + "%",
+		Limit:  10,
+		Offset: 0,
+	})
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, len(hospitals), 3)
+	for _, h := range hospitals {
+		require.Contains(t, h.Name, prefix)
+	}
+}
+
+func TestListHospitalsByLocation(t *testing.T) {
+	state := "TestState_" + util.RandomString(3)
+	city := "TestCity_" + util.RandomString(3)
+
+	for i := 0; i < 3; i++ {
+		_, err := testQueries.CreateHospital(context.Background(), CreateHospitalParams{
+			Name:    util.RandomName(),
+			Photo:   sql.NullString{String: util.RandomString(10), Valid: true},
+			State:   state,
+			City:    city,
+			Address: util.RandomString(30),
+			Phone:   sql.NullString{String: util.RandomPhone(), Valid: true},
+		})
+		require.NoError(t, err)
+	}
+
+	// Add noise
+	for i := 0; i < 2; i++ {
+		CreateAndGetHospital(t)
+	}
+
+	hospitals, err := testQueries.ListHospitalsByLocation(context.Background(), ListHospitalsByLocationParams{
+		State:  state,
+		City:   city,
+		Limit:  10,
+		Offset: 0,
+	})
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, len(hospitals), 3)
+
+	for _, h := range hospitals {
+		require.Equal(t, state, h.State)
+		require.Equal(t, city, h.City)
+	}
 }
