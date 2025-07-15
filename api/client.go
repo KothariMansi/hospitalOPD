@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"net/http"
 
 	db "github.com/KothariMansi/hospitalOPD/db/sqlc"
@@ -37,4 +38,98 @@ func (server *Server) createClient(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, id)
+}
+
+type getClientRequest struct {
+	Id int64 `uri:"id" binding:"required,min=1"`
+}
+
+func (server *Server) getClient(ctx *gin.Context) {
+	var req getClientRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	arg := req.Id
+	client, err := server.store.GetClient(ctx, arg)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, err)
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	ctx.JSON(http.StatusAccepted, client)
+}
+
+type listClientRequest struct {
+	PageId   int32 `form:"page_size" binding:"required,min=1"`
+	PageSize int32 `form:"page_offset" binding:"required,min=1,max=20"`
+}
+
+func (server *Server) ListClients(ctx *gin.Context) {
+	var req listClientRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, err)
+		return
+	}
+	arg := db.ListClientsParams{
+		Limit:  req.PageSize,
+		Offset: (req.PageId - 1) * req.PageSize,
+	}
+	clients, err := server.store.ListClients(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, clients)
+}
+
+type deleteClientRequest struct {
+	Id int64 `uri:"id" binding:"required,min=1"`
+}
+
+func (server *Server) DeleteClient(ctx *gin.Context) {
+	var req deleteClientRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, err)
+		return
+	}
+	arg := req.Id
+	err := server.store.DeleteClient(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, "Deleted")
+}
+
+type updateClientRequest struct {
+	Id    int64  `json:"id" binding:"required"`
+	Name  string `json:"name"`
+	State string `json:"state"`
+	City  string `json:"city"`
+	Age   int32  `json:"age"`
+}
+
+func (server *Server) UpdateClient(ctx *gin.Context) {
+	var req updateClientRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, err)
+		return
+	}
+	arg := db.UpdateClientParams{
+		ID:    req.Id,
+		Name:  req.Name,
+		State: req.State,
+		City:  req.City,
+		Age:   req.Age,
+	}
+	err := server.store.UpdateClient(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, err)
 }
