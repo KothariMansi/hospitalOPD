@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"net/http"
+	"strings"
 
 	db "github.com/KothariMansi/hospitalOPD/db/sqlc"
 	"github.com/gin-gonic/gin"
@@ -44,7 +45,7 @@ type getClientRequest struct {
 	Id int64 `uri:"id" binding:"required,min=1"`
 }
 
-func (server *Server) getClient(ctx *gin.Context) {
+func (server *Server) GetClient(ctx *gin.Context) {
 	var req getClientRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -54,7 +55,7 @@ func (server *Server) getClient(ctx *gin.Context) {
 	client, err := server.store.GetClient(ctx, arg)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, err)
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -64,14 +65,14 @@ func (server *Server) getClient(ctx *gin.Context) {
 }
 
 type listClientRequest struct {
-	PageId   int32 `form:"page_size" binding:"required,min=1"`
-	PageSize int32 `form:"page_offset" binding:"required,min=1,max=20"`
+	PageId   int32 `form:"page_id" binding:"required,min=1"`
+	PageSize int32 `form:"page_size" binding:"required,min=1,max=20"`
 }
 
 func (server *Server) ListClients(ctx *gin.Context) {
 	var req listClientRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, err)
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 	arg := db.ListClientsParams{
@@ -80,7 +81,7 @@ func (server *Server) ListClients(ctx *gin.Context) {
 	}
 	clients, err := server.store.ListClients(ctx, arg)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, err)
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 	ctx.JSON(http.StatusOK, clients)
@@ -93,13 +94,13 @@ type deleteClientRequest struct {
 func (server *Server) DeleteClient(ctx *gin.Context) {
 	var req deleteClientRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, err)
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 	arg := req.Id
 	err := server.store.DeleteClient(ctx, arg)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, err)
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 	ctx.JSON(http.StatusOK, "Deleted")
@@ -116,7 +117,7 @@ type updateClientRequest struct {
 func (server *Server) UpdateClient(ctx *gin.Context) {
 	var req updateClientRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, err)
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 	arg := db.UpdateClientParams{
@@ -128,8 +129,41 @@ func (server *Server) UpdateClient(ctx *gin.Context) {
 	}
 	err := server.store.UpdateClient(ctx, arg)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, err)
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	ctx.JSON(http.StatusOK, err)
+	ctx.JSON(http.StatusOK, "Updated")
+}
+
+func (server *Server) CountClients(ctx *gin.Context) {
+	count, err := server.store.CountClients(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	}
+	ctx.JSON(http.StatusOK, count)
+}
+
+type SearchClientsByNameRequest struct {
+	Name     string `form:"name" binding:"required"`
+	PageId   int32  `form:"page_id" binding:"required,min=1"`
+	PageSize int32  `form:"page_size" binding:"required,min=1,max=20"`
+}
+
+func (server *Server) SearchClientsByName(ctx *gin.Context) {
+	var req SearchClientsByNameRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	arg := db.SearchClientsByNameParams{
+		Name:   "%" + strings.TrimSpace(req.Name) + "%",
+		Limit:  req.PageSize,
+		Offset: (req.PageId - 1) * req.PageSize,
+	}
+	clients, err := server.store.SearchClientsByName(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, clients)
 }
