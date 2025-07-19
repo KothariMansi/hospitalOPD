@@ -22,15 +22,16 @@ func (q *Queries) CountClients(ctx context.Context) (int64, error) {
 }
 
 const createClient = `-- name: CreateClient :execresult
-INSERT INTO Client (name, state, city, age)
-VALUES (?, ?, ?, ?)
+INSERT INTO Client (name, state, city, number, age)
+VALUES (?, ?, ?, ?, ?)
 `
 
 type CreateClientParams struct {
-	Name  string `json:"name"`
-	State string `json:"state"`
-	City  string `json:"city"`
-	Age   int32  `json:"age"`
+	Name   string `json:"name"`
+	State  string `json:"state"`
+	City   string `json:"city"`
+	Number int64  `json:"number"`
+	Age    int32  `json:"age"`
 }
 
 func (q *Queries) CreateClient(ctx context.Context, arg CreateClientParams) (sql.Result, error) {
@@ -38,6 +39,7 @@ func (q *Queries) CreateClient(ctx context.Context, arg CreateClientParams) (sql
 		arg.Name,
 		arg.State,
 		arg.City,
+		arg.Number,
 		arg.Age,
 	)
 }
@@ -52,7 +54,7 @@ func (q *Queries) DeleteClient(ctx context.Context, id int64) error {
 }
 
 const getClient = `-- name: GetClient :one
-SELECT id, name, state, city, age FROM Client WHERE id = ?
+SELECT id, name, state, city, number, age FROM Client WHERE id = ?
 `
 
 func (q *Queries) GetClient(ctx context.Context, id int64) (Client, error) {
@@ -63,13 +65,14 @@ func (q *Queries) GetClient(ctx context.Context, id int64) (Client, error) {
 		&i.Name,
 		&i.State,
 		&i.City,
+		&i.Number,
 		&i.Age,
 	)
 	return i, err
 }
 
 const listClients = `-- name: ListClients :many
-SELECT id, name, state, city, age FROM Client ORDER BY id LIMIT ? OFFSET ?
+SELECT id, name, state, city, number, age FROM Client ORDER BY id LIMIT ? OFFSET ?
 `
 
 type ListClientsParams struct {
@@ -91,6 +94,7 @@ func (q *Queries) ListClients(ctx context.Context, arg ListClientsParams) ([]Cli
 			&i.Name,
 			&i.State,
 			&i.City,
+			&i.Number,
 			&i.Age,
 		); err != nil {
 			return nil, err
@@ -107,7 +111,7 @@ func (q *Queries) ListClients(ctx context.Context, arg ListClientsParams) ([]Cli
 }
 
 const listClientsByLocation = `-- name: ListClientsByLocation :many
-SELECT id, name, state, city, age FROM Client
+SELECT id, name, state, city, number, age FROM Client
 WHERE city = ? AND state = ?
 ORDER BY id
 LIMIT ? OFFSET ?
@@ -139,6 +143,7 @@ func (q *Queries) ListClientsByLocation(ctx context.Context, arg ListClientsByLo
 			&i.Name,
 			&i.State,
 			&i.City,
+			&i.Number,
 			&i.Age,
 		); err != nil {
 			return nil, err
@@ -155,7 +160,7 @@ func (q *Queries) ListClientsByLocation(ctx context.Context, arg ListClientsByLo
 }
 
 const searchClientsByName = `-- name: SearchClientsByName :many
-SELECT id, name, state, city, age FROM Client
+SELECT id, name, state, city, number, age FROM Client
 WHERE name LIKE ?
 ORDER BY id
 LIMIT ? OFFSET ?
@@ -181,6 +186,7 @@ func (q *Queries) SearchClientsByName(ctx context.Context, arg SearchClientsByNa
 			&i.Name,
 			&i.State,
 			&i.City,
+			&i.Number,
 			&i.Age,
 		); err != nil {
 			return nil, err
@@ -197,15 +203,16 @@ func (q *Queries) SearchClientsByName(ctx context.Context, arg SearchClientsByNa
 }
 
 const updateClient = `-- name: UpdateClient :exec
-UPDATE Client SET name = ?, state = ?, city = ?, age = ? WHERE id = ?
+UPDATE Client SET name = ?, state = ?, city = ?, number = ?, age = ? WHERE id = ?
 `
 
 type UpdateClientParams struct {
-	Name  string `json:"name"`
-	State string `json:"state"`
-	City  string `json:"city"`
-	Age   int32  `json:"age"`
-	ID    int64  `json:"id"`
+	Name   string `json:"name"`
+	State  string `json:"state"`
+	City   string `json:"city"`
+	Number int64  `json:"number"`
+	Age    int32  `json:"age"`
+	ID     int64  `json:"id"`
 }
 
 func (q *Queries) UpdateClient(ctx context.Context, arg UpdateClientParams) error {
@@ -213,6 +220,7 @@ func (q *Queries) UpdateClient(ctx context.Context, arg UpdateClientParams) erro
 		arg.Name,
 		arg.State,
 		arg.City,
+		arg.Number,
 		arg.Age,
 		arg.ID,
 	)

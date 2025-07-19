@@ -3,6 +3,7 @@ CREATE TABLE `Client` (
   `name` VARCHAR(255) NOT NULL,
   `state` VARCHAR(255) NOT NULL,
   `city` VARCHAR(255) NOT NULL,
+  `number` BIGINT NOT NULL,
   `age` INT NOT NULL
 );
 

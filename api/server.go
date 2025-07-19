@@ -17,6 +17,7 @@ func NewServer(store db.Store) *Server {
 	router := gin.Default()
 
 	// Add route to router
+	// Client router
 	router.POST("/clients", server.createClient)
 	router.GET("/clients/:id", server.GetClient)
 	router.GET("/clients", server.ListClients)
@@ -24,6 +25,9 @@ func NewServer(store db.Store) *Server {
 	router.PATCH("/clients", server.UpdateClient)
 	router.GET("/clients/count", server.CountClients)
 	router.GET("/clients/search", server.SearchClientsByName)
+
+	// Hospital router
+	router.POST("/hospitals", server.createHospital)
 
 	server.router = router
 	return server

@@ -11,10 +11,11 @@ import (
 
 func CreateAndGetClient(t *testing.T) Client {
 	arg := CreateClientParams{
-		Name:  util.RandomName(),
-		State: util.RandomState(),
-		City:  util.RandomCity(),
-		Age:   util.RandomAge(),
+		Name:   util.RandomName(),
+		State:  util.RandomState(),
+		City:   util.RandomCity(),
+		Number: util.RandomInt(1000000000, 9999999999),
+		Age:    util.RandomAge(),
 	}
 	result, err := testQueries.CreateClient(context.Background(), arg)
 	require.NoError(t, err)
@@ -25,6 +26,7 @@ func CreateAndGetClient(t *testing.T) Client {
 	require.Equal(t, arg.Name, client.Name)
 	require.Equal(t, arg.State, client.State)
 	require.Equal(t, arg.City, client.City)
+	require.Equal(t, arg.Number, client.Number)
 	require.Equal(t, arg.Age, client.Age)
 	return client
 }
@@ -36,10 +38,11 @@ func TestCreateAndGetClient(t *testing.T) {
 func TestListClients(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		_, err := testQueries.CreateClient(context.Background(), CreateClientParams{
-			Name:  util.RandomName(),
-			State: util.RandomState(),
-			City:  util.RandomCity(),
-			Age:   util.RandomAge(),
+			Name:   util.RandomName(),
+			State:  util.RandomState(),
+			City:   util.RandomCity(),
+			Number: util.RandomInt(1000000000, 9999999999),
+			Age:    util.RandomAge(),
 		})
 		require.NoError(t, err)
 	}
@@ -58,13 +61,15 @@ func TestUpdateClient(t *testing.T) {
 	newAge := util.RandomAge()
 	newCity := util.RandomCity()
 	newState := util.RandomState()
+	newNumber := util.RandomInt(1000000000, 9999999999)
 
 	err := testQueries.UpdateClient(context.Background(), UpdateClientParams{
-		ID:    client.ID,
-		Name:  client.Name,
-		State: newState,
-		City:  newCity,
-		Age:   int32(newAge),
+		ID:     client.ID,
+		Name:   client.Name,
+		State:  newState,
+		City:   newCity,
+		Number: newNumber,
+		Age:    int32(newAge),
 	})
 	require.NoError(t, err)
 
@@ -72,7 +77,9 @@ func TestUpdateClient(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, newState, updated.State)
 	require.Equal(t, newCity, updated.City)
+	require.Equal(t, newNumber, updated.Number)
 	require.Equal(t, newAge, updated.Age)
+
 }
 
 func TestDeleteClient(t *testing.T) {
@@ -101,10 +108,11 @@ func TestSearchClientsByName(t *testing.T) {
 	targetName := "TestName_" + util.RandomString(3)
 	for i := 0; i < 3; i++ {
 		_, err := testQueries.CreateClient(context.Background(), CreateClientParams{
-			Name:  fmt.Sprintf("%s_%d", targetName, i),
-			State: util.RandomState(),
-			City:  util.RandomCity(),
-			Age:   util.RandomAge(),
+			Name:   fmt.Sprintf("%s_%d", targetName, i),
+			State:  util.RandomState(),
+			City:   util.RandomCity(),
+			Number: util.RandomInt(1000000000, 9999999999),
+			Age:    util.RandomAge(),
 		})
 		require.NoError(t, err)
 	}
@@ -133,10 +141,11 @@ func TestListClientsByLocation(t *testing.T) {
 	// Add matching clients
 	for i := 0; i < 3; i++ {
 		_, err := testQueries.CreateClient(context.Background(), CreateClientParams{
-			Name:  util.RandomName(),
-			State: state,
-			City:  city,
-			Age:   util.RandomAge(),
+			Name:   util.RandomName(),
+			State:  state,
+			City:   city,
+			Number: util.RandomInt(0, 10),
+			Age:    util.RandomAge(),
 		})
 		require.NoError(t, err)
 	}

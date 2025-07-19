@@ -1,6 +1,6 @@
 -- name: CreateClient :execresult
-INSERT INTO Client (name, state, city, age)
-VALUES (?, ?, ?, ?);
+INSERT INTO Client (name, state, city, number, age)
+VALUES (?, ?, ?, ?, ?);
 
 -- name: GetClient :one
 SELECT * FROM Client WHERE id = ?;
@@ -9,7 +9,7 @@ SELECT * FROM Client WHERE id = ?;
 SELECT * FROM Client ORDER BY id LIMIT ? OFFSET ?;
 
 -- name: UpdateClient :exec
-UPDATE Client SET name = ?, state = ?, city = ?, age = ? WHERE id = ?;
+UPDATE Client SET name = ?, state = ?, city = ?, number = ?, age = ? WHERE id = ?;
 
 -- name: DeleteClient :exec
 DELETE FROM Client WHERE id = ?;

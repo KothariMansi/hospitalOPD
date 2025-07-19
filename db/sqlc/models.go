@@ -61,11 +61,12 @@ type Checkuptime struct {
 }
 
 type Client struct {
-	ID    int64  `json:"id"`
-	Name  string `json:"name"`
-	State string `json:"state"`
-	City  string `json:"city"`
-	Age   int32  `json:"age"`
+	ID     int64  `json:"id"`
+	Name   string `json:"name"`
+	State  string `json:"state"`
+	City   string `json:"city"`
+	Number int64  `json:"number"`
+	Age    int32  `json:"age"`
 }
 
 type Doctor struct {

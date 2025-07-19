@@ -10,10 +10,11 @@ import (
 )
 
 type createClientRequest struct {
-	Name  string `json:"name" binding:"required"`
-	State string `json:"state" binding:"required"`
-	City  string `json:"city" binding:"required"`
-	Age   int32  `json:"age" binding:"required"`
+	Name   string `json:"name" binding:"required"`
+	State  string `json:"state" binding:"required"`
+	City   string `json:"city" binding:"required"`
+	Number int64  `json:"number" binding:"required"`
+	Age    int32  `json:"age" binding:"required"`
 }
 
 func (server *Server) createClient(ctx *gin.Context) {
@@ -23,10 +24,11 @@ func (server *Server) createClient(ctx *gin.Context) {
 		return
 	}
 	arg := db.CreateClientParams{
-		Name:  req.Name,
-		State: req.State,
-		City:  req.City,
-		Age:   req.Age,
+		Name:   req.Name,
+		State:  req.State,
+		City:   req.City,
+		Number: req.Number,
+		Age:    req.Age,
 	}
 	result, err := server.store.CreateClient(ctx, arg)
 	if err != nil {
@@ -107,11 +109,12 @@ func (server *Server) DeleteClient(ctx *gin.Context) {
 }
 
 type updateClientRequest struct {
-	Id    int64  `json:"id" binding:"required"`
-	Name  string `json:"name"`
-	State string `json:"state"`
-	City  string `json:"city"`
-	Age   int32  `json:"age"`
+	Id     int64  `json:"id" binding:"required"`
+	Name   string `json:"name"`
+	State  string `json:"state"`
+	City   string `json:"city"`
+	Number int64  `json:"number"`
+	Age    int32  `json:"age"`
 }
 
 func (server *Server) UpdateClient(ctx *gin.Context) {
@@ -121,11 +124,12 @@ func (server *Server) UpdateClient(ctx *gin.Context) {
 		return
 	}
 	arg := db.UpdateClientParams{
-		ID:    req.Id,
-		Name:  req.Name,
-		State: req.State,
-		City:  req.City,
-		Age:   req.Age,
+		ID:     req.Id,
+		Name:   req.Name,
+		State:  req.State,
+		City:   req.City,
+		Number: req.Number,
+		Age:    req.Age,
 	}
 	err := server.store.UpdateClient(ctx, arg)
 	if err != nil {
