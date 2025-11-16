@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
+	"time"
 )
 
 type UserGender string
@@ -124,11 +125,13 @@ type Speciality struct {
 }
 
 type User struct {
-	ID       int64         `json:"id"`
-	Name     string        `json:"name"`
-	Password string        `json:"password"`
-	State    string        `json:"state"`
-	City     string        `json:"city"`
-	Gender   UserGender    `json:"gender"`
-	Age      sql.NullInt32 `json:"age"`
+	ID                int64         `json:"id"`
+	Username          string        `json:"username"`
+	FullName          string        `json:"full_name"`
+	HashedPassword    string        `json:"hashed_password"`
+	State             string        `json:"state"`
+	City              string        `json:"city"`
+	Gender            UserGender    `json:"gender"`
+	PasswordChangedAt time.Time     `json:"password_changed_at"`
+	Age               sql.NullInt32 `json:"age"`
 }

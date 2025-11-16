@@ -73,6 +73,10 @@ func RandomPhone() string {
 	return fmt.Sprintf("9%09d", rand.Intn(1e9))
 }
 
+func RandomPhoneNumber() int64 {
+	return RandomInt(1000000000, 9999999999)
+}
+
 // RandomAddress returns a test address string
 func RandomAddress() string {
 	return fmt.Sprintf("%d %s Street", rand.Intn(100), RandomString(5))

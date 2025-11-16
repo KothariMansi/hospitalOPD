@@ -14,7 +14,7 @@ func CreateAndGetClient(t *testing.T) Client {
 		Name:   util.RandomName(),
 		State:  util.RandomState(),
 		City:   util.RandomCity(),
-		Number: util.RandomInt(1000000000, 9999999999),
+		Number: util.RandomPhoneNumber(),
 		Age:    util.RandomAge(),
 	}
 	result, err := testQueries.CreateClient(context.Background(), arg)
@@ -41,7 +41,7 @@ func TestListClients(t *testing.T) {
 			Name:   util.RandomName(),
 			State:  util.RandomState(),
 			City:   util.RandomCity(),
-			Number: util.RandomInt(1000000000, 9999999999),
+			Number: util.RandomPhoneNumber(),
 			Age:    util.RandomAge(),
 		})
 		require.NoError(t, err)

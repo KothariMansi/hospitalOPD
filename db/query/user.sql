@@ -1,6 +1,6 @@
 -- name: CreateUser :execresult
-INSERT INTO User (name, password, state, city, gender, age)
-VALUES (?, ?, ?, ?, ?, ?);
+INSERT INTO User (username, full_name, hashed_password, state, city, gender, password_changed_at, age)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
 -- name: GetUser :one
 SELECT * FROM User WHERE id = ?;
@@ -9,7 +9,7 @@ SELECT * FROM User WHERE id = ?;
 SELECT * FROM User ORDER BY id LIMIT ? OFFSET ?;
 
 -- name: UpdateUser :exec
-UPDATE User SET name = ?, password = ?, state = ?, city = ?, gender = ?, age = ?
+UPDATE User SET username = ?, full_name = ?, hashed_password = ?, state = ?, city = ?, gender = ?, password_changed_at = ?, age = ?
 WHERE id = ?;
 
 -- name: DeleteUser :exec
@@ -20,7 +20,7 @@ SELECT COUNT(*) FROM User;
 
 -- name: SearchUsersByName :many
 SELECT * FROM User
-WHERE name LIKE ?
+WHERE full_name LIKE ?
 ORDER BY id
 LIMIT ? OFFSET ?;
 

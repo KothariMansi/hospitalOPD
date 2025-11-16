@@ -9,11 +9,13 @@ CREATE TABLE `Client` (
 
 CREATE TABLE `User` (
   `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
-  `name` VARCHAR(255) NOT NULL,
-  `password` VARCHAR(255) NOT NULL,
+  `username` VARCHAR(255) NOT NULL,
+  `full_name` VARCHAR(255) NOT NULL,
+  `hashed_password` VARCHAR(255) NOT NULL,
   `state` VARCHAR(255) NOT NULL,
   `city` VARCHAR(255) NOT NULL,
   `gender` ENUM ('MALE', 'FEMALE', 'OTHER') NOT NULL,
+  `password_changed_at` TIMESTAMP NOT NULL DEFAULT '1970-01-01 00:00:01',
   `age` INT
 );
 

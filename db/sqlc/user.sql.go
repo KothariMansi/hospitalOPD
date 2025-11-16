@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"time"
 )
 
 const countUsers = `-- name: CountUsers :one
@@ -22,26 +23,30 @@ func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
 }
 
 const createUser = `-- name: CreateUser :execresult
-INSERT INTO User (name, password, state, city, gender, age)
-VALUES (?, ?, ?, ?, ?, ?)
+INSERT INTO User (username, full_name, hashed_password, state, city, gender, password_changed_at, age)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateUserParams struct {
-	Name     string        `json:"name"`
-	Password string        `json:"password"`
-	State    string        `json:"state"`
-	City     string        `json:"city"`
-	Gender   UserGender    `json:"gender"`
-	Age      sql.NullInt32 `json:"age"`
+	Username          string        `json:"username"`
+	FullName          string        `json:"full_name"`
+	HashedPassword    string        `json:"hashed_password"`
+	State             string        `json:"state"`
+	City              string        `json:"city"`
+	Gender            UserGender    `json:"gender"`
+	PasswordChangedAt time.Time     `json:"password_changed_at"`
+	Age               sql.NullInt32 `json:"age"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (sql.Result, error) {
 	return q.db.ExecContext(ctx, createUser,
-		arg.Name,
-		arg.Password,
+		arg.Username,
+		arg.FullName,
+		arg.HashedPassword,
 		arg.State,
 		arg.City,
 		arg.Gender,
+		arg.PasswordChangedAt,
 		arg.Age,
 	)
 }
@@ -56,7 +61,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, name, password, state, city, gender, age FROM User WHERE id = ?
+SELECT id, username, full_name, hashed_password, state, city, gender, password_changed_at, age FROM User WHERE id = ?
 `
 
 func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
@@ -64,18 +69,20 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.Name,
-		&i.Password,
+		&i.Username,
+		&i.FullName,
+		&i.HashedPassword,
 		&i.State,
 		&i.City,
 		&i.Gender,
+		&i.PasswordChangedAt,
 		&i.Age,
 	)
 	return i, err
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, name, password, state, city, gender, age FROM User ORDER BY id LIMIT ? OFFSET ?
+SELECT id, username, full_name, hashed_password, state, city, gender, password_changed_at, age FROM User ORDER BY id LIMIT ? OFFSET ?
 `
 
 type ListUsersParams struct {
@@ -94,11 +101,13 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 		var i User
 		if err := rows.Scan(
 			&i.ID,
-			&i.Name,
-			&i.Password,
+			&i.Username,
+			&i.FullName,
+			&i.HashedPassword,
 			&i.State,
 			&i.City,
 			&i.Gender,
+			&i.PasswordChangedAt,
 			&i.Age,
 		); err != nil {
 			return nil, err
@@ -115,7 +124,7 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 }
 
 const listUsersByGenderAndCity = `-- name: ListUsersByGenderAndCity :many
-SELECT id, name, password, state, city, gender, age FROM User
+SELECT id, username, full_name, hashed_password, state, city, gender, password_changed_at, age FROM User
 WHERE gender = ? AND city = ?
 ORDER BY id
 LIMIT ? OFFSET ?
@@ -144,11 +153,13 @@ func (q *Queries) ListUsersByGenderAndCity(ctx context.Context, arg ListUsersByG
 		var i User
 		if err := rows.Scan(
 			&i.ID,
-			&i.Name,
-			&i.Password,
+			&i.Username,
+			&i.FullName,
+			&i.HashedPassword,
 			&i.State,
 			&i.City,
 			&i.Gender,
+			&i.PasswordChangedAt,
 			&i.Age,
 		); err != nil {
 			return nil, err
@@ -165,20 +176,20 @@ func (q *Queries) ListUsersByGenderAndCity(ctx context.Context, arg ListUsersByG
 }
 
 const searchUsersByName = `-- name: SearchUsersByName :many
-SELECT id, name, password, state, city, gender, age FROM User
-WHERE name LIKE ?
+SELECT id, username, full_name, hashed_password, state, city, gender, password_changed_at, age FROM User
+WHERE full_name LIKE ?
 ORDER BY id
 LIMIT ? OFFSET ?
 `
 
 type SearchUsersByNameParams struct {
-	Name   string `json:"name"`
-	Limit  int32  `json:"limit"`
-	Offset int32  `json:"offset"`
+	FullName string `json:"full_name"`
+	Limit    int32  `json:"limit"`
+	Offset   int32  `json:"offset"`
 }
 
 func (q *Queries) SearchUsersByName(ctx context.Context, arg SearchUsersByNameParams) ([]User, error) {
-	rows, err := q.db.QueryContext(ctx, searchUsersByName, arg.Name, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, searchUsersByName, arg.FullName, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -188,11 +199,13 @@ func (q *Queries) SearchUsersByName(ctx context.Context, arg SearchUsersByNamePa
 		var i User
 		if err := rows.Scan(
 			&i.ID,
-			&i.Name,
-			&i.Password,
+			&i.Username,
+			&i.FullName,
+			&i.HashedPassword,
 			&i.State,
 			&i.City,
 			&i.Gender,
+			&i.PasswordChangedAt,
 			&i.Age,
 		); err != nil {
 			return nil, err
@@ -209,27 +222,31 @@ func (q *Queries) SearchUsersByName(ctx context.Context, arg SearchUsersByNamePa
 }
 
 const updateUser = `-- name: UpdateUser :exec
-UPDATE User SET name = ?, password = ?, state = ?, city = ?, gender = ?, age = ?
+UPDATE User SET username = ?, full_name = ?, hashed_password = ?, state = ?, city = ?, gender = ?, password_changed_at = ?, age = ?
 WHERE id = ?
 `
 
 type UpdateUserParams struct {
-	Name     string        `json:"name"`
-	Password string        `json:"password"`
-	State    string        `json:"state"`
-	City     string        `json:"city"`
-	Gender   UserGender    `json:"gender"`
-	Age      sql.NullInt32 `json:"age"`
-	ID       int64         `json:"id"`
+	Username          string        `json:"username"`
+	FullName          string        `json:"full_name"`
+	HashedPassword    string        `json:"hashed_password"`
+	State             string        `json:"state"`
+	City              string        `json:"city"`
+	Gender            UserGender    `json:"gender"`
+	PasswordChangedAt time.Time     `json:"password_changed_at"`
+	Age               sql.NullInt32 `json:"age"`
+	ID                int64         `json:"id"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
 	_, err := q.db.ExecContext(ctx, updateUser,
-		arg.Name,
-		arg.Password,
+		arg.Username,
+		arg.FullName,
+		arg.HashedPassword,
 		arg.State,
 		arg.City,
 		arg.Gender,
+		arg.PasswordChangedAt,
 		arg.Age,
 		arg.ID,
 	)

@@ -26,8 +26,15 @@ func NewServer(store db.Store) *Server {
 	router.GET("/clients/count", server.CountClients)
 	router.GET("/clients/search", server.SearchClientsByName)
 
+	// User router
+	router.POST("/users", server.createUser)
+
 	// Hospital router
 	router.POST("/hospitals", server.createHospital)
+	router.GET("/hospitals/:id", server.getHospital)
+	router.GET("/hospitals", server.listHospital)
+	router.PATCH("/hospitals", server.updateHospital)
+	router.DELETE("/hospitals", server.deleteHospital)
 
 	server.router = router
 	return server
