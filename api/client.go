@@ -47,7 +47,7 @@ type getClientRequest struct {
 	Id int64 `uri:"id" binding:"required,min=1"`
 }
 
-func (server *Server) GetClient(ctx *gin.Context) {
+func (server *Server) getClient(ctx *gin.Context) {
 	var req getClientRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -71,7 +71,7 @@ type listClientRequest struct {
 	PageSize int32 `form:"page_size" binding:"required,min=1,max=20"`
 }
 
-func (server *Server) ListClients(ctx *gin.Context) {
+func (server *Server) listClients(ctx *gin.Context) {
 	var req listClientRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -93,7 +93,7 @@ type deleteClientRequest struct {
 	Id int64 `uri:"id" binding:"required,min=1"`
 }
 
-func (server *Server) DeleteClient(ctx *gin.Context) {
+func (server *Server) deleteClient(ctx *gin.Context) {
 	var req deleteClientRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -117,7 +117,7 @@ type updateClientRequest struct {
 	Age    int32  `json:"age"`
 }
 
-func (server *Server) UpdateClient(ctx *gin.Context) {
+func (server *Server) updateClient(ctx *gin.Context) {
 	var req updateClientRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -139,7 +139,7 @@ func (server *Server) UpdateClient(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, "Updated")
 }
 
-func (server *Server) CountClients(ctx *gin.Context) {
+func (server *Server) countClients(ctx *gin.Context) {
 	count, err := server.store.CountClients(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -153,7 +153,7 @@ type SearchClientsByNameRequest struct {
 	PageSize int32  `form:"page_size" binding:"required,min=1,max=20"`
 }
 
-func (server *Server) SearchClientsByName(ctx *gin.Context) {
+func (server *Server) searchClientsByName(ctx *gin.Context) {
 	var req SearchClientsByNameRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))

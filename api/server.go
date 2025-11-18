@@ -19,12 +19,12 @@ func NewServer(store db.Store) *Server {
 	// Add route to router
 	// Client router
 	router.POST("/clients", server.createClient)
-	router.GET("/clients/:id", server.GetClient)
-	router.GET("/clients", server.ListClients)
-	router.DELETE("/clients/:id", server.DeleteClient)
-	router.PATCH("/clients", server.UpdateClient)
-	router.GET("/clients/count", server.CountClients)
-	router.GET("/clients/search", server.SearchClientsByName)
+	router.GET("/clients/:id", server.getClient)
+	router.GET("/clients", server.listClients)
+	router.DELETE("/clients/:id", server.deleteClient)
+	router.PATCH("/clients", server.updateClient)
+	router.GET("/clients/count", server.countClients)
+	router.GET("/clients/search", server.searchClientsByName)
 
 	// User router
 	router.POST("/users", server.createUser)
@@ -34,7 +34,16 @@ func NewServer(store db.Store) *Server {
 	router.GET("/hospitals/:id", server.getHospital)
 	router.GET("/hospitals", server.listHospital)
 	router.PATCH("/hospitals", server.updateHospital)
-	router.DELETE("/hospitals", server.deleteHospital)
+	router.DELETE("/hospitals/:id", server.deleteHospital)
+	router.GET("/hospitals/count", server.countHospitals)
+	router.GET("/hospitals/search/name", server.searchHospitalsByName)
+	router.GET("/hospitals/search/location", server.searchHospitalsByLocation)
+
+	// Speciality router
+	router.POST("/specialities", server.createSpeciality)
+	router.GET("/specialities/:id", server.getSpeciality)
+	router.GET("/specialities", server.listSpecialities)
+	router.DELETE("/specialities/:id", server.deleteSpeciality)
 
 	server.router = router
 	return server

@@ -136,3 +136,64 @@ func (server *Server) deleteHospital(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, "Deleted")
 }
+
+func (server *Server) countHospitals(ctx *gin.Context) {
+	count, err := server.store.CountHospitals(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, count)
+}
+
+type SearchHospitalByNameRequest struct {
+	Name     string `form:"name" binding:"required"`
+	PageId   int32  `form:"page_id" binding:"required,min=1"`
+	PageSize int32  `form:"page_size" binding:"required,min=1"`
+}
+
+func (server *Server) searchHospitalsByName(ctx *gin.Context) {
+	var req SearchHospitalByNameRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	arg := db.SearchHospitalsByNameParams{
+		Name:   req.Name,
+		Limit:  req.PageSize,
+		Offset: (req.PageId - 1) * req.PageSize,
+	}
+	hopitals, err := server.store.SearchHospitalsByName(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, hopitals)
+}
+
+type SearchHospitalsByLocationRequest struct {
+	State    string `form:"state" binding:"required"`
+	City     string `form:"city" binding:"required"`
+	PageId   int32  `form:"page_id" binding:"required,min=1"`
+	PageSize int32  `form:"page_size" binding:"required,min=1"`
+}
+
+func (server *Server) searchHospitalsByLocation(ctx *gin.Context) {
+	var req SearchHospitalsByLocationRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	arg := db.ListHospitalsByLocationParams{
+		State:  req.State,
+		City:   req.City,
+		Limit:  req.PageSize,
+		Offset: (req.PageId - 1) * req.PageSize,
+	}
+	hopitals, err := server.store.ListHospitalsByLocation(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, hopitals)
+}
