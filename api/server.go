@@ -44,6 +44,9 @@ func NewServer(store db.Store) *Server {
 	router.GET("/specialities/:id", server.getSpeciality)
 	router.GET("/specialities", server.listSpecialities)
 	router.DELETE("/specialities/:id", server.deleteSpeciality)
+	router.PATCH("/specialities", server.updateSpeciality)
+	router.GET("/specialities/count", server.countSpecialites)
+	router.GET("/specialities/search", server.searchSpecialitiesByName)
 
 	server.router = router
 	return server
