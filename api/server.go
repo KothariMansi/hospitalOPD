@@ -48,6 +48,13 @@ func NewServer(store db.Store) *Server {
 	router.GET("/specialities/count", server.countSpecialites)
 	router.GET("/specialities/search", server.searchSpecialitiesByName)
 
+	// CheckUp Time router
+	router.POST("/checkuptimes", server.createCheckUpTime)
+	router.GET("/checkuptimes/:id", server.getCheckUpTime)
+	router.GET("/checkuptimes", server.listCheckUpTime)
+	router.PATCH("/checkuptimes", server.updateCheckUpTime)
+	router.DELETE("/checkuptimes/:id", server.deleteCheckUpTime)
+
 	server.router = router
 	return server
 }
