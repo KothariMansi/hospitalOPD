@@ -69,9 +69,6 @@ DB_SOURCE=user:password@tcp(localhost:3306)/hospitalopd?parseTime=true
 
 # Server
 SERVER_ADDRESS=0.0.0.0:8080
-
-# Optional general secret (if used by the application)
-# SECRET_KEY=replace-with-a-secret
 ```
 
 Note: The code references fields like `config.DBDriver`, `config.DBSource`, and `config.ServerAddress` in `main.go`. Use those exact keys when checking the config struct in `db/util`.
